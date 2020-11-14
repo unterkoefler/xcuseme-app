@@ -1,47 +1,28 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:xcuseme/model.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(XCuseMeApp());
+void main() async {
+  runApp(
+    ChangeNotifierProvider<Model>(
+      create: (context) => Model({}),
+      child: XCuseMeApp(),
+    ),
+  );
 }
 
-class XCuseMeApp extends StatefulWidget {
-  @override
-  _XCuseMeAppState createState() => _XCuseMeAppState();
-}
-
-class _XCuseMeAppState extends State<XCuseMeApp> {
-  Map<DateTime, Event> events;
-
-  @override
-  void initState() {
-    super.initState();
-    events = Map();
-  }
-
-  void addExcuse(DateTime when, String description) {
-    setState(() {
-      events[when] = new Event(EventType.EXCUSE, description);
-    });
-  }
-
-  void addExercise(DateTime when, String description) {
-    setState(() {
-      events[when] = new Event(EventType.EXERCISE, description);
-    });
-  }
-
+class XCuseMeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    print(events);
     return MaterialApp(
       title: 'XCuseMe',
       initialRoute: '/',
       routes: {
         '/': (context) => XCuseMeScaffold(HomePage()),
-        '/log-excuse': (context) => XCuseMeScaffold(LogExcusePage(addExcuse)),
-        '/log-exercise': (context) =>
-            XCuseMeScaffold(LogExercisePage(addExercise)),
+        '/log-excuse': (context) => XCuseMeScaffold(LogExcusePage()),
+        '/log-exercise': (context) => XCuseMeScaffold(LogExercisePage()),
       },
     );
   }
@@ -58,6 +39,8 @@ class XCuseMeScaffold extends StatelessWidget {
 }
 
 class HomePage extends StatelessWidget {
+  final CalendarController _calendarController = CalendarController();
+
   Widget _logButton(BuildContext context, String label) {
     String next = label == 'Log Excuse' ? '/log-excuse' : '/log-exercise';
     return Container(
@@ -82,55 +65,52 @@ class HomePage extends StatelessWidget {
       children: <Widget>[
         _logButton(context, 'Log Excuse'),
         _logButton(context, 'Log Exercise'),
-        XCuseCalendar(),
+        Consumer<Model>(builder: (context, model, child) {
+          return XCuseCalendar(model, _calendarController);
+        }),
       ],
     ));
   }
 }
 
-class XCuseCalendar extends StatefulWidget {
-  @override
-  _XCuseCalendarState createState() => _XCuseCalendarState();
-}
+class XCuseCalendar extends StatelessWidget {
+  final Map<DateTime, List<Event>> _events_for_cal = Map();
+  final CalendarController _calendarController;
 
-class _XCuseCalendarState extends State<XCuseCalendar> {
-  CalendarController _calendarController;
-
-  @override
-  void initState() {
-    super.initState();
-    _calendarController = CalendarController();
-  }
-
-  @override
-  void dispose() {
-    _calendarController.dispose();
-    super.dispose();
+  XCuseCalendar(model, this._calendarController) {
+    model.events.forEach((dt, event) {
+      _events_for_cal[dt] = [event];
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    print(_events_for_cal);
     return TableCalendar(
       calendarController: _calendarController,
+      events: _events_for_cal,
+      calendarStyle: CalendarStyle(
+        markersColor: Colors.deepOrange[400],
+      ),
     );
   }
 }
 
 class LogExcusePage extends StatefulWidget {
-  Function addExcuse;
+  //Function addExcuse;
 
-  LogExcusePage(this.addExcuse);
+  // LogExcusePage(this.addExcuse);
 
   @override
-  _LogExcuseState createState() => _LogExcuseState(addExcuse);
+  _LogExcuseState createState() => _LogExcuseState(/*addExcuse*/);
 }
 
 class _LogExcuseState extends State<LogExcusePage> {
   DateTime selectedDate = DateTime.now();
   TextEditingController _controller;
-  Function addExcuse;
+  //Function addExcuse;
 
-  _LogExcuseState(this.addExcuse);
+  //_LogExcuseState(this.addExcuse);
 
   void initState() {
     super.initState();
@@ -181,7 +161,8 @@ class _LogExcuseState extends State<LogExcusePage> {
           ElevatedButton(
               child: Text('Save'),
               onPressed: () {
-                addExcuse(selectedDate, _controller.text);
+                Provider.of<Model>(context, listen: false)
+                    .addExcuse(selectedDate, _controller.text);
                 Navigator.pop(context);
               }),
         ]));
@@ -189,20 +170,20 @@ class _LogExcuseState extends State<LogExcusePage> {
 }
 
 class LogExercisePage extends StatefulWidget {
-  Function addExercise;
+  //Function addExercise;
 
-  LogExercisePage(this.addExercise);
+  //LogExercisePage(this.addExercise);
 
   @override
-  _LogExerciseState createState() => _LogExerciseState(addExercise);
+  _LogExerciseState createState() => _LogExerciseState(/*addExercise*/);
 }
 
 class _LogExerciseState extends State<LogExercisePage> {
   DateTime selectedDate = DateTime.now();
   TextEditingController _controller;
-  Function addExercise;
+  // Function addExercise;
 
-  _LogExerciseState(this.addExercise);
+  //_LogExerciseState(this.addExercise);
 
   void initState() {
     super.initState();
@@ -253,23 +234,10 @@ class _LogExerciseState extends State<LogExercisePage> {
           ElevatedButton(
               child: Text('Save'),
               onPressed: () {
-                addExercise(selectedDate, _controller.text);
+                Provider.of<Model>(context, listen: false)
+                    .addExercise(selectedDate, _controller.text);
                 Navigator.pop(context);
               }),
         ]));
-  }
-}
-
-enum EventType { EXCUSE, EXERCISE }
-
-class Event {
-  EventType type;
-  String description;
-
-  Event(this.type, this.description);
-
-  @override
-  String toString() {
-    return "Event(type=${type}, desc=${description})";
   }
 }
