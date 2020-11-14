@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:xcuseme/database.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
 
 class Model extends ChangeNotifier {
   Map<DateTime, Event> _events;

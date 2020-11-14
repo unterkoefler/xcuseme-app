@@ -38,17 +38,34 @@ class XCuseMeScaffold extends StatelessWidget {
   }
 }
 
+final Map<EventType, String> PATHS = {
+  EventType.EXCUSE: '/log-excuse',
+  EventType.EXERCISE: '/log-exercise'
+};
+final Map<EventType, String> LABELS = {
+  EventType.EXCUSE: 'Log Excuse',
+  EventType.EXERCISE: 'Log Exercise'
+};
+final Map<EventType, Color> TYPE_COLORS = {
+  EventType.EXCUSE: Colors.red,
+  EventType.EXERCISE: Colors.green
+};
+
 class HomePage extends StatelessWidget {
   final CalendarController _calendarController = CalendarController();
 
-  Widget _logButton(BuildContext context, String label) {
-    String next = label == 'Log Excuse' ? '/log-excuse' : '/log-exercise';
+  Widget _logButton(BuildContext context, EventType type) {
+    String next = PATHS[type];
+    String label = LABELS[type];
+    Color color = TYPE_COLORS[type];
+
     return Container(
         width: double.infinity,
         margin: EdgeInsets.all(12.0),
         child: ElevatedButton(
             style: ButtonStyle(
-                padding: MaterialStateProperty.all(EdgeInsets.all(18.0))),
+                padding: MaterialStateProperty.all(EdgeInsets.all(18.0)),
+                backgroundColor: MaterialStateProperty.all(color)),
             child: Text(label, textScaleFactor: 2),
             onPressed: () {
               Navigator.pushNamed(
@@ -63,8 +80,8 @@ class HomePage extends StatelessWidget {
     return SingleChildScrollView(
         child: Column(
       children: <Widget>[
-        _logButton(context, 'Log Excuse'),
-        _logButton(context, 'Log Exercise'),
+        _logButton(context, EventType.EXCUSE),
+        _logButton(context, EventType.EXERCISE),
         Consumer<Model>(builder: (context, model, child) {
           return XCuseCalendar(model, _calendarController);
         }),
@@ -83,34 +100,47 @@ class XCuseCalendar extends StatelessWidget {
     });
   }
 
+  Widget _buildEventMarker(DateTime dt, Event event) {
+    Color color = TYPE_COLORS[event.type];
+    return SizedBox.expand(
+      child: Container(
+        margin: const EdgeInsets.all(12.0),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color.withAlpha(80),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    print(_events_for_cal);
     return TableCalendar(
       calendarController: _calendarController,
       events: _events_for_cal,
       calendarStyle: CalendarStyle(
         markersColor: Colors.deepOrange[400],
       ),
+      builders:
+          CalendarBuilders(markersBuilder: (context, date, events, holidays) {
+        if (events.isNotEmpty) {
+          return <Widget>[_buildEventMarker(date, events[0])];
+        } else {
+          return <Widget>[];
+        }
+      }),
     );
   }
 }
 
 class LogExcusePage extends StatefulWidget {
-  //Function addExcuse;
-
-  // LogExcusePage(this.addExcuse);
-
   @override
-  _LogExcuseState createState() => _LogExcuseState(/*addExcuse*/);
+  _LogExcuseState createState() => _LogExcuseState();
 }
 
 class _LogExcuseState extends State<LogExcusePage> {
   DateTime selectedDate = DateTime.now();
   TextEditingController _controller;
-  //Function addExcuse;
-
-  //_LogExcuseState(this.addExcuse);
 
   void initState() {
     super.initState();
@@ -170,20 +200,13 @@ class _LogExcuseState extends State<LogExcusePage> {
 }
 
 class LogExercisePage extends StatefulWidget {
-  //Function addExercise;
-
-  //LogExercisePage(this.addExercise);
-
   @override
-  _LogExerciseState createState() => _LogExerciseState(/*addExercise*/);
+  _LogExerciseState createState() => _LogExerciseState();
 }
 
 class _LogExerciseState extends State<LogExercisePage> {
   DateTime selectedDate = DateTime.now();
   TextEditingController _controller;
-  // Function addExercise;
-
-  //_LogExerciseState(this.addExercise);
 
   void initState() {
     super.initState();
