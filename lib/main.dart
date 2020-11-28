@@ -1,11 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:xcuseme/model.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:async';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     ChangeNotifierProvider<Model>(
       create: (context) => Model({}),
@@ -14,29 +18,45 @@ void main() async {
   );
 }
 
-class XCuseMeApp extends StatelessWidget {
-  Widget _infoAction() {
+class InfoAction extends StatelessWidget {
+  final bool selected;
+
+  InfoAction({this.selected});
+
+  Widget build(BuildContext context) {
+    Color color = selected ? Colors.blue[800] : Colors.blueGrey[300];
     return Container(
         margin: EdgeInsets.only(right: 12.0),
-        child: Icon(
-          Icons.info,
-          color: Colors.blueGrey[300],
-          size: 36.0,
-          semanticLabel: 'About this app',
+        child: IconButton(
+          icon: Icon(
+            Icons.info,
+            color: color,
+            size: 36.0,
+            semanticLabel: 'About this app',
+          ),
+          onPressed: () => selected
+              ? Navigator.pop(context)
+              : Navigator.pushNamed(context, '/info'),
         ));
   }
+}
 
+class XCuseMeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'XCuseMe',
-      initialRoute: '/',
+      initialRoute: '/loading',
       routes: {
-        '/': (context) => XCuseMeScaffold(HomePage(), actions: [_infoAction()]),
+        '/': (context) =>
+            XCuseMeScaffold(HomePage(), actions: [InfoAction(selected: false)]),
         '/log-excuse': (context) =>
             XCuseMeScaffold(CreatePageContainer(EventType.EXCUSE)),
         '/log-exercise': (context) =>
             XCuseMeScaffold(CreatePageContainer(EventType.EXERCISE)),
+        '/info': (context) =>
+            XCuseMeScaffold(InfoPage(), actions: [InfoAction(selected: true)]),
+        '/loading': (context) => Material(child: MaybeLoadingPage()),
       },
     );
   }
@@ -84,6 +104,100 @@ final Map<EventType, String> STRINGS = {
   EventType.EXCUSE: 'Excuse',
   EventType.EXERCISE: 'Exercise',
 };
+
+class MaybeLoadingPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<Model>(builder: (context, model, child) {
+      if (model.loadedData) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Timer(Duration(seconds: 3), () {
+            Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+          });
+        });
+      }
+      return LoadingPage();
+    });
+  }
+}
+
+class LoadingPage extends StatelessWidget {
+  Widget _loadingIndicator(BuildContext context) {
+    return LinearProgressIndicator(
+        value: null,
+        backgroundColor: Colors.teal[300],
+        valueColor: AlwaysStoppedAnimation<Color>(Colors.red[300]),
+        minHeight: 14);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.expand(
+        child: Container(
+            decoration: BoxDecoration(
+                gradient: LinearGradient(
+              colors: [Colors.teal[200], Colors.red[200]],
+            )),
+            child: Column(children: <Widget>[
+              Expanded(
+                  child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text('XCuseMe',
+                      style: TextStyle(
+                          fontSize: 48, color: Colors.deepPurple[500])),
+                  Text('The exercise tracking app for real people',
+                      style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontSize: 16,
+                          color: Colors.black)),
+                ],
+              )),
+              _loadingIndicator(context)
+            ])));
+  }
+}
+
+class InfoPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    const info_pre = """
+XCuseMe is the exercise tracking app for real people. Use it to track your exercise -- and your excuses! Ever wonder how many times you've skipped your ab routine because you woke up too late? Or exactly how long that knee injury kept you on the couch? Life happens and sometimes we can't keep up, but now we can keep track.
+
+To record a new activity, tap the "Log Excuse" or "Log Exercise" button, enter a text description of your exercise or excuse, and press "Save". Only one type of activity can be saved on a given day. If you went for a run yesterday, but skipped your core workout, you can note that in the description of your exercise and be proud that you did anything!
+
+To ensure your privacy, all data is stored locally on your device and will never be sold to third-parties.
+
+XCuseMe is currently in active development. To report a bug or request a feature, please create an issue on """;
+
+    const info_post = """.
+
+Thank you and have a good day!
+    """;
+    return SizedBox.expand(
+        child: Container(
+      padding: EdgeInsets.all(24),
+      decoration: BoxDecoration(color: Colors.grey[200]),
+      child: RichText(
+          text: TextSpan(
+        text: info_pre,
+        style: TextStyle(color: Colors.black, fontSize: 18, height: 1.5),
+        children: <TextSpan>[
+          TextSpan(
+            text: 'the Github repository',
+            style: TextStyle(
+                color: Colors.blue[800], decoration: TextDecoration.underline),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () {
+                launch('https://github.com/unterkoefler/xcuseme');
+              },
+          ),
+          TextSpan(text: info_post),
+        ],
+      )),
+    ));
+  }
+}
 
 class HomePage extends StatelessWidget {
   Widget _logButton(BuildContext context, EventType type) {

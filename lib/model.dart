@@ -8,6 +8,7 @@ class Model extends ChangeNotifier {
   Map<DateTime, Event> _events;
   final dbHelper = DatabaseHelper.instance;
   final CalendarController calendarController = CalendarController();
+  bool loadedData = false;
 
   Model(this._events) {
     fetchAndSetData();
@@ -26,6 +27,7 @@ class Model extends ChangeNotifier {
     });
     _events = new_events;
     print("loaded data");
+    loadedData = true;
     notifyListeners();
   }
 
