@@ -2,10 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:xcuseme/database.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class Model extends ChangeNotifier {
   Map<DateTime, Event> _events;
   final dbHelper = DatabaseHelper.instance;
+  final CalendarController calendarController = CalendarController();
 
   Model(this._events) {
     fetchAndSetData();
@@ -29,32 +31,26 @@ class Model extends ChangeNotifier {
 
   Map<DateTime, Event> get events => _events;
 
-  void addExcuse(DateTime when, String description) async {
+  void addEvent(DateTime when, String description, EventType type) async {
     int millis = when.millisecondsSinceEpoch;
+    String type_str = TYPE_STRINGS[type];
     Map<String, dynamic> row = {
       DatabaseHelper.columnMillis: millis,
-      DatabaseHelper.columnType: 'EXCUSE',
+      DatabaseHelper.columnType: type_str,
       DatabaseHelper.columnDescription: description,
     };
     await dbHelper.insert(row);
-    _events[when] = new Event(EventType.EXCUSE, description);
-    notifyListeners();
-  }
-
-  void addExercise(DateTime when, String description) async {
-    int millis = when.millisecondsSinceEpoch;
-    Map<String, dynamic> row = {
-      DatabaseHelper.columnMillis: millis,
-      DatabaseHelper.columnType: 'EXERCISE',
-      DatabaseHelper.columnDescription: description,
-    };
-    await dbHelper.insert(row);
-    _events[when] = new Event(EventType.EXERCISE, description);
+    _events[when] = new Event(type, description);
     notifyListeners();
   }
 }
 
 enum EventType { EXCUSE, EXERCISE }
+
+const Map<EventType, String> TYPE_STRINGS = {
+  EventType.EXCUSE: 'EXCUSE',
+  EventType.EXERCISE: 'EXERCISE',
+};
 
 class Event {
   EventType type;
