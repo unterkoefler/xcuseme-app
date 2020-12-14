@@ -57,6 +57,7 @@ class XCuseMeApp extends StatelessWidget {
         '/info': (context) =>
             XCuseMeScaffold(InfoPage(), actions: [InfoAction(selected: true)]),
         '/loading': (context) => Material(child: MaybeLoadingPage()),
+        '/details': (context) => XCuseMeScaffold(DetailsPage()),
       },
     );
   }
@@ -100,6 +101,10 @@ final Map<EventType, Color> TYPE_COLORS = {
   EventType.EXCUSE: Colors.red[200],
   EventType.EXERCISE: Colors.teal[200]
 };
+final Map<EventType, IconData> TYPE_ICONS = {
+  EventType.EXCUSE: Icons.hotel,
+  EventType.EXERCISE: Icons.directions_run,
+};
 final Map<EventType, String> STRINGS = {
   EventType.EXCUSE: 'Excuse',
   EventType.EXERCISE: 'Exercise',
@@ -111,7 +116,7 @@ class MaybeLoadingPage extends StatelessWidget {
     return Consumer<Model>(builder: (context, model, child) {
       if (model.loadedData) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          Timer(Duration(seconds: 3), () {
+          Timer(Duration(seconds: 2), () {
             Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
           });
         });
@@ -155,6 +160,48 @@ class LoadingPage extends StatelessWidget {
               )),
               _loadingIndicator(context)
             ])));
+  }
+}
+
+class DetailsPage extends StatelessWidget {
+  Widget _editButton(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.edit, color: Colors.blue[800], size: 36),
+      onPressed: () => print('edit'),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final DatedEvent dte = ModalRoute.of(context).settings.arguments;
+    final DateTime dt = dte.dt;
+    final Event event = dte.event;
+    final String title = '${STRINGS[event.type]} Details';
+    final Color color = TYPE_COLORS[event.type];
+    String date = DateFormat.MMMMEEEEd().format(dt);
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            padding: EdgeInsets.all(24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text(title, style: TextStyle(color: color, fontSize: 36)),
+                _editButton(context),
+              ],
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.only(left: 24, right: 24, bottom: 12),
+            child: Text(date, style: TextStyle(fontStyle: FontStyle.italic, fontSize: 18)),
+          ),
+          Container(
+            padding: EdgeInsets.only(left: 24, right: 24, top: 12),
+            child: Text(event.description, style: TextStyle(fontSize: 16)),
+          ),
+      ],
+    );
   }
 }
 
@@ -221,35 +268,144 @@ class HomePage extends StatelessWidget {
             }));
   }
 
-  Widget _changeViewButton(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(right: 12.0, top: 24.0),
-      child: Align(
-          alignment: Alignment.centerRight,
-          child: Icon(
-            Icons.view_list,
-            color: Colors.blueGrey[300],
-            size: 42.0,
-            semanticLabel: 'Switch to list view',
-          )),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-        child: Column(
+    return SingleChildScrollView(child: Column(
       children: <Widget>[
         _logButton(context, EventType.EXCUSE),
         _logButton(context, EventType.EXERCISE),
-        _changeViewButton(context),
         Consumer<Model>(builder: (context, model, child) {
-          return XCuseCalendar(model);
+          return HomePageMainView(model);
         }),
       ],
     ));
   }
 }
+
+class HomePageMainView extends StatelessWidget {
+  final Model model;
+
+  HomePageMainView(this.model);
+
+  Widget _getView(BuildContext context) {
+    switch (model.mainView) {
+      case MainView.CALENDAR:
+        return XCuseCalendar(model);
+      case MainView.LIST:
+        return XCuseList(model);
+    }
+  }
+
+  final Map<MainView, IconData> icons = {
+    MainView.CALENDAR: Icons.view_list,
+    MainView.LIST: Icons.date_range,
+  };
+
+  final Map<MainView, String> labels = {
+    MainView.CALENDAR: "Switch to list view",
+    MainView.LIST: "Switch to calendar view",
+  };
+
+  Widget _changeViewButton(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.only(right: 12.0, top: 6.0, bottom: 6),
+      child: Align(
+          alignment: Alignment.centerRight,
+          child: IconButton(
+            icon: Icon(
+              icons[model.mainView],
+              color: Colors.blueGrey[300],
+              size: 42.0,
+              semanticLabel: labels[model.mainView],
+            ),
+            onPressed: () => model.toggleMainView(),
+          )
+        ),
+    );
+  }
+
+
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        _changeViewButton(context),
+        _getView(context),
+      ],
+    );
+  }
+}
+
+class XCuseList extends StatelessWidget {
+  final Model model;
+  List<DateTime> keys;
+
+  XCuseList(this.model) {
+    this.keys = this.model.events.keys.toList();
+    this.keys.sort((d1, d2) => d2.compareTo(d1));
+  }
+
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 500, // TODO: make relative to device
+      child: ListView.separated(
+      itemCount: keys.length,
+      itemBuilder: (BuildContext context, int index) {
+        DateTime dt = keys.elementAt(index);
+        Event e = model.events[dt];
+        return EventTile(dt, e);
+      },
+      separatorBuilder: (BuildContext context, int index) => const Divider(),
+    ));
+  }
+}
+
+class EventTile extends StatelessWidget {
+  final DateTime dt;
+  final Event event;
+
+  EventTile(this.dt, this.event);
+
+  Icon _icon(BuildContext context) {
+    Color color = TYPE_COLORS[event.type];
+    IconData iconData = TYPE_ICONS[event.type];
+    return Icon(
+      iconData,
+      size: 36.0,
+      color: color,
+    );
+  }
+
+
+  Widget build(BuildContext context) {
+    String date = DateFormat.Md().format(dt);
+    String title = "${date} - ${event.description}";
+    return ListTile(
+      leading: _icon(context),
+      title: Text(title, softWrap: false, overflow: TextOverflow.ellipsis,),
+      trailing: InkWell(
+          onTap: () => Navigator.pushNamed(context, '/details', arguments: DatedEvent(dt, event)),
+          child: SizedBox(
+            height: double.infinity,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text("Details", style: TextStyle(color: Colors.blueGrey[300])),
+                Icon(Icons.navigate_next, size: 24, color: Colors.blueGrey[300]),
+              ],
+            )
+          ),
+        ),
+    );
+  }
+}
+
+class DatedEvent {
+  final DateTime dt;
+  final Event event;
+
+  DatedEvent(this.dt, this.event);
+}
+
 
 class XCuseCalendar extends StatelessWidget {
   final Map<DateTime, List<Event>> _events_for_cal = Map();

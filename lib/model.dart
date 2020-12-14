@@ -9,6 +9,7 @@ class Model extends ChangeNotifier {
   final dbHelper = DatabaseHelper.instance;
   final CalendarController calendarController = CalendarController();
   bool loadedData = false;
+  MainView mainView = MainView.CALENDAR;
 
   Model(this._events) {
     fetchAndSetData();
@@ -45,7 +46,21 @@ class Model extends ChangeNotifier {
     _events[when] = new Event(type, description);
     notifyListeners();
   }
+
+  void toggleMainView() {
+      switch (this.mainView) {
+          case MainView.CALENDAR:
+            this.mainView = MainView.LIST;
+            break;
+          case MainView.LIST:
+            this.mainView = MainView.CALENDAR;
+            break;
+      }
+      notifyListeners();
+  }
 }
+
+enum MainView { CALENDAR, LIST }
 
 enum EventType { EXCUSE, EXERCISE }
 
