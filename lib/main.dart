@@ -375,16 +375,15 @@ class EventTile extends StatelessWidget {
     );
   }
 
-
+  @override
   Widget build(BuildContext context) {
     String date = DateFormat.Md().format(dt);
     String title = "${date} - ${event.description}";
     return ListTile(
+      onTap: () => Navigator.pushNamed(context, '/details', arguments: DatedEvent(dt, event)),
       leading: _icon(context),
       title: Text(title, softWrap: false, overflow: TextOverflow.ellipsis,),
-      trailing: InkWell(
-          onTap: () => Navigator.pushNamed(context, '/details', arguments: DatedEvent(dt, event)),
-          child: SizedBox(
+      trailing: SizedBox(
             height: double.infinity,
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -394,7 +393,54 @@ class EventTile extends StatelessWidget {
               ],
             )
           ),
-        ),
+    );
+  }
+}
+
+class CreateEventTile extends StatelessWidget {
+  Widget _dialogOption(BuildContext context, EventType type) {
+    String next = PATHS[type];
+    String label = BUTTON_LABELS[type];
+    Color color = TYPE_COLORS[type];
+
+    return SimpleDialogOption(
+      onPressed: () { Navigator.pushReplacementNamed(context, next); },
+      child: Text(label, style: TextStyle(fontSize: 24, color: color)),
+    );
+  }
+
+  Future _showDialog(BuildContext context) async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          children: <Widget>[
+            _dialogOption(context, EventType.EXCUSE),
+            const Divider(),
+            _dialogOption(context, EventType.EXERCISE),
+          ],
+        );
+      },
+    );
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(Icons.help, size: 36.0, color: Colors.blueGrey[300]),
+      title: Text('Nothing logged for selected day'),
+      onTap: () => _showDialog(context),
+      trailing: SizedBox(
+          height: double.infinity,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text('Add', style: TextStyle(color: Colors.blueGrey[300])),
+              Icon(Icons.navigate_next, size: 24, color: Colors.blueGrey[300]),
+            ],
+          ),
+      ),
     );
   }
 }
@@ -410,8 +456,10 @@ class DatedEvent {
 class XCuseCalendar extends StatelessWidget {
   final Map<DateTime, List<Event>> _events_for_cal = Map();
   CalendarController _calendarController;
+  Model model;
 
   XCuseCalendar(model) {
+    this.model = model;
     this._calendarController = model.calendarController;
     model.events.forEach((dt, event) {
       _events_for_cal[dt] = [event];
@@ -431,8 +479,7 @@ class XCuseCalendar extends StatelessWidget {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _calendar(BuildContext context) {
     return TableCalendar(
       calendarController: _calendarController,
       endDay: DateTime.now(),
@@ -441,6 +488,7 @@ class XCuseCalendar extends StatelessWidget {
         selectedColor: Colors.blue[800],
         todayColor: Colors.blue[200],
       ),
+      onDaySelected: _onDaySelected,
       availableCalendarFormats: const {
         CalendarFormat.month: '',
       },
@@ -464,6 +512,33 @@ class XCuseCalendar extends StatelessWidget {
       }),
     );
   }
+
+  Widget _eventForSelectedDay(BuildContext context) {
+    Event event = model.eventForSelectedDay;
+    print(event);
+    if (event == null) {
+      return CreateEventTile();
+    } else {
+      return EventTile(model.selectedDay, event);
+    }
+  }
+
+  void _onDaySelected(DateTime day, List events, List holidays) {
+    Event event = events.isEmpty ? null : events[0];
+    model.updateSelectedDay(day, event);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        _calendar(context),
+        const Divider(),
+        _eventForSelectedDay(context),
+        const Divider()
+      ],
+    );
+  }
 }
 
 class CreatePageContainer extends StatelessWidget {
@@ -474,7 +549,7 @@ class CreatePageContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<Model>(builder: (context, model, child) {
-      return CreatePage(_eventType, model.calendarController.selectedDay);
+      return CreatePage(_eventType, model.selectedDay);
     });
   }
 }

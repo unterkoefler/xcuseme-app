@@ -10,6 +10,8 @@ class Model extends ChangeNotifier {
   final CalendarController calendarController = CalendarController();
   bool loadedData = false;
   MainView mainView = MainView.CALENDAR;
+  DateTime selectedDay = DateTime.now();
+  Event eventForSelectedDay = null;
 
   Model(this._events) {
     fetchAndSetData();
@@ -57,6 +59,12 @@ class Model extends ChangeNotifier {
             break;
       }
       notifyListeners();
+  }
+
+  void updateSelectedDay(DateTime newDay, Event event) {
+    this.selectedDay = newDay;
+    this.eventForSelectedDay = event;
+    notifyListeners();
   }
 }
 
