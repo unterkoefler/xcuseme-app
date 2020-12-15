@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class Model extends ChangeNotifier {
-  Map<DateTime, Event> _events;
+  List<Event> _events;
   final dbHelper = DatabaseHelper.instance;
   final CalendarController calendarController = CalendarController();
   bool loadedData = false;
@@ -19,14 +19,15 @@ class Model extends ChangeNotifier {
 
   Future<void> fetchAndSetData() async {
     List<Map<String, dynamic>> rows = await dbHelper.queryAllRows();
-    Map<DateTime, Event> new_events = Map();
+    List<Event> new_events = [];
     rows.forEach((row) {
+      int millis = row[DatabaseHelper.columnMillis];
       DateTime dt =
-          DateTime.fromMillisecondsSinceEpoch(row[DatabaseHelper.columnMillis]);
+          DateTime.fromMillisecondsSinceEpoch(millis);
       EventType type = row[DatabaseHelper.columnType] == 'EXCUSE'
           ? EventType.EXCUSE
           : EventType.EXERCISE;
-      new_events[dt] = Event(type, row[DatabaseHelper.columnDescription]);
+      new_events.add(Event(type, row[DatabaseHelper.columnDescription], millis));
     });
     _events = new_events;
     print("loaded data");
@@ -34,7 +35,7 @@ class Model extends ChangeNotifier {
     notifyListeners();
   }
 
-  Map<DateTime, Event> get events => _events;
+  List<Event> get events => _events;
 
   void addEvent(DateTime when, String description, EventType type) async {
     int millis = when.millisecondsSinceEpoch;
@@ -45,15 +46,15 @@ class Model extends ChangeNotifier {
       DatabaseHelper.columnDescription: description,
     };
     await dbHelper.insert(row);
-    _events[when] = new Event(type, description);
+    _events.add(Event(type, description, millis));
     notifyListeners();
   }
 
-  void updateEvent(Event oldEvent, DateTime oldDate, DateTime newDate, String newDescription) async {
-    if (oldEvent.description == newDescription && oldDate == newDate) {
-      return;
+  Future<Event> updateEvent(Event oldEvent, DateTime newDate, String newDescription) async {
+    if (oldEvent.description == newDescription && oldEvent.datetime == newDate) {
+      return oldEvent;
     }
-    int oldMillis = oldDate.millisecondsSinceEpoch;
+    int oldMillis = oldEvent.millis;
     int newMillis = newDate.millisecondsSinceEpoch;
     String type_str = TYPE_STRINGS[oldEvent.type];
     Map<String, dynamic> newRow = {
@@ -62,12 +63,13 @@ class Model extends ChangeNotifier {
       DatabaseHelper.columnDescription: newDescription,
     };
     await dbHelper.update(oldMillis, newRow);
-    if (oldDate == newDate) {
-      oldEvent.description = newDescription;
-    } else {
-      events[newDate] = new Event(oldEvent.type, newDescription);
+    if (oldEvent.datetime != newDate) {
+      this.eventForSelectedDay = null;
     }
+    oldEvent.description = newDescription;
+    oldEvent.millis = newDate.millisecondsSinceEpoch;
     notifyListeners();
+    return oldEvent;
   }
 
   void toggleMainView() {
@@ -101,8 +103,11 @@ const Map<EventType, String> TYPE_STRINGS = {
 class Event {
   EventType type;
   String description;
+  int millis;
 
-  Event(this.type, this.description);
+  Event(this.type, this.description, this.millis);
+
+  DateTime get datetime => DateTime.fromMillisecondsSinceEpoch(millis);
 
   @override
   String toString() {

@@ -12,7 +12,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
     ChangeNotifierProvider<Model>(
-      create: (context) => Model({}),
+      create: (context) => Model([]),
       child: XCuseMeApp(),
     ),
   );
@@ -165,18 +165,17 @@ class LoadingPage extends StatelessWidget {
 }
 
 class DetailsPage extends StatelessWidget {
-  Widget _editButton(BuildContext context, DatedEvent dte) {
+  Widget _editButton(BuildContext context, Event e) {
     return IconButton(
       icon: Icon(Icons.edit, color: Colors.blue[800], size: 36),
-      onPressed: () => Navigator.pushNamed(context, '/edit', arguments: dte),
+      onPressed: () => Navigator.pushNamed(context, '/edit', arguments: e),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final DatedEvent dte = ModalRoute.of(context).settings.arguments;
-    final DateTime dt = dte.dt;
-    final Event event = dte.event;
+    final Event event = ModalRoute.of(context).settings.arguments;
+    final DateTime dt = event.datetime;;
     final String title = '${STRINGS[event.type]} Details';
     final Color color = TYPE_COLORS[event.type];
     String date = DateFormat.MMMMEEEEd().format(dt);
@@ -189,7 +188,7 @@ class DetailsPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text(title, style: TextStyle(color: color, fontSize: 36)),
-                _editButton(context, dte),
+                _editButton(context, event),
               ],
             ),
           ),
@@ -338,22 +337,20 @@ class HomePageMainView extends StatelessWidget {
 
 class XCuseList extends StatelessWidget {
   final Model model;
-  List<DateTime> keys;
 
-  XCuseList(this.model) {
-    this.keys = this.model.events.keys.toList();
-    this.keys.sort((d1, d2) => d2.compareTo(d1));
-  }
+  XCuseList(this.model);
 
   Widget build(BuildContext context) {
+    List<Event> events = model.events;
+    events.sort((a, b) => b.millis.compareTo(a.millis));
+
     return SizedBox(
       height: 500, // TODO: make relative to device
       child: ListView.separated(
-      itemCount: keys.length,
+      itemCount: events.length,
       itemBuilder: (BuildContext context, int index) {
-        DateTime dt = keys.elementAt(index);
-        Event e = model.events[dt];
-        return EventTile(dt, e);
+        Event e = events.elementAt(index);
+        return EventTile(e);
       },
       separatorBuilder: (BuildContext context, int index) => const Divider(),
     ));
@@ -361,10 +358,9 @@ class XCuseList extends StatelessWidget {
 }
 
 class EventTile extends StatelessWidget {
-  final DateTime dt;
   final Event event;
 
-  EventTile(this.dt, this.event);
+  EventTile(this.event);
 
   Icon _icon(BuildContext context) {
     Color color = TYPE_COLORS[event.type];
@@ -378,10 +374,10 @@ class EventTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String date = DateFormat.Md().format(dt);
+    String date = DateFormat.Md().format(event.datetime);
     String title = "${date} - ${event.description}";
     return ListTile(
-      onTap: () => Navigator.pushNamed(context, '/details', arguments: DatedEvent(dt, event)),
+      onTap: () => Navigator.pushNamed(context, '/details', arguments: event),
       leading: _icon(context),
       title: Text(title, softWrap: false, overflow: TextOverflow.ellipsis,),
       trailing: SizedBox(
@@ -446,14 +442,6 @@ class CreateEventTile extends StatelessWidget {
   }
 }
 
-class DatedEvent {
-  final DateTime dt;
-  final Event event;
-
-  DatedEvent(this.dt, this.event);
-}
-
-
 class XCuseCalendar extends StatelessWidget {
   final Map<DateTime, List<Event>> _events_for_cal = Map();
   CalendarController _calendarController;
@@ -462,8 +450,8 @@ class XCuseCalendar extends StatelessWidget {
   XCuseCalendar(model) {
     this.model = model;
     this._calendarController = model.calendarController;
-    model.events.forEach((dt, event) {
-      _events_for_cal[dt] = [event];
+    model.events.forEach((event) {
+      _events_for_cal[event.datetime] = [event];
     });
   }
 
@@ -519,7 +507,7 @@ class XCuseCalendar extends StatelessWidget {
     if (event == null) {
       return CreateEventTile();
     } else {
-      return EventTile(model.selectedDay, event);
+      return EventTile(event);
     }
   }
 
@@ -544,31 +532,27 @@ class XCuseCalendar extends StatelessWidget {
 class EditPageContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final DatedEvent dte = ModalRoute.of(context).settings.arguments;
-    final DateTime dt = dte.dt;
-    final Event event = dte.event;
-    return EditPage(dt, event);
+    final Event event = ModalRoute.of(context).settings.arguments;
+    return EditPage(event);
   }
 }
 
 class EditPage extends StatefulWidget {
-  final DateTime dt;
   final Event event;
 
-  EditPage(this.dt, this.event);
+  EditPage(this.event);
 
   @override
-  _EditPageState createState() => _EditPageState(dt, event);
+  _EditPageState createState() => _EditPageState(event);
 }
 
 class _EditPageState extends State<EditPage> {
-  final DateTime originalDate;
   DateTime selectedDate;
   final Event event;
   TextEditingController _controller;
 
-  _EditPageState(this.originalDate, this.event) {
-    this.selectedDate = originalDate;
+  _EditPageState(this.event) {
+    this.selectedDate = this.event.datetime;
   }
 
   void initState() {
@@ -628,11 +612,11 @@ class _EditPageState extends State<EditPage> {
                 padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
                     EdgeInsets.all(16)),
               ),
-              onPressed: () {
-                Provider.of<Model>(context, listen: false)
-                    .updateEvent(event, originalDate, selectedDate, _controller.text);
+              onPressed: () async {
+                Event newEvent = await Provider.of<Model>(context, listen: false)
+                    .updateEvent(event, selectedDate, _controller.text);
 
-                Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+                Navigator.pushNamedAndRemoveUntil(context, '/details', (route) => route.isFirst, arguments: newEvent);
               })),
     ]);
   }
