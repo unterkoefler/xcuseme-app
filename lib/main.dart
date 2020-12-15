@@ -58,6 +58,7 @@ class XCuseMeApp extends StatelessWidget {
             XCuseMeScaffold(InfoPage(), actions: [InfoAction(selected: true)]),
         '/loading': (context) => Material(child: MaybeLoadingPage()),
         '/details': (context) => XCuseMeScaffold(DetailsPage()),
+        '/edit': (context) => XCuseMeScaffold(EditPageContainer()),
       },
     );
   }
@@ -164,10 +165,10 @@ class LoadingPage extends StatelessWidget {
 }
 
 class DetailsPage extends StatelessWidget {
-  Widget _editButton(BuildContext context) {
+  Widget _editButton(BuildContext context, DatedEvent dte) {
     return IconButton(
       icon: Icon(Icons.edit, color: Colors.blue[800], size: 36),
-      onPressed: () => print('edit'),
+      onPressed: () => Navigator.pushNamed(context, '/edit', arguments: dte),
     );
   }
 
@@ -188,7 +189,7 @@ class DetailsPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text(title, style: TextStyle(color: color, fontSize: 36)),
-                _editButton(context),
+                _editButton(context, dte),
               ],
             ),
           ),
@@ -515,7 +516,6 @@ class XCuseCalendar extends StatelessWidget {
 
   Widget _eventForSelectedDay(BuildContext context) {
     Event event = model.eventForSelectedDay;
-    print(event);
     if (event == null) {
       return CreateEventTile();
     } else {
@@ -540,6 +540,157 @@ class XCuseCalendar extends StatelessWidget {
     );
   }
 }
+
+class EditPageContainer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final DatedEvent dte = ModalRoute.of(context).settings.arguments;
+    final DateTime dt = dte.dt;
+    final Event event = dte.event;
+    return EditPage(dt, event);
+  }
+}
+
+class EditPage extends StatefulWidget {
+  final DateTime dt;
+  final Event event;
+
+  EditPage(this.dt, this.event);
+
+  @override
+  _EditPageState createState() => _EditPageState(dt, event);
+}
+
+class _EditPageState extends State<EditPage> {
+  final DateTime originalDate;
+  DateTime selectedDate;
+  final Event event;
+  TextEditingController _controller;
+
+  _EditPageState(this.originalDate, this.event) {
+    this.selectedDate = originalDate;
+  }
+
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: event.description);
+  }
+
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  _selectDate(BuildContext context) async {
+    final DateTime picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: selectedDate.subtract(new Duration(days: 600)),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+      });
+    }
+  }
+
+  Widget _buttons(BuildContext context) {
+    String type = STRINGS[event.type];
+    return Row(children: <Widget>[
+      Expanded(
+          flex: 3,
+          child: ElevatedButton(
+              child: Text("Cancel", style: TextStyle(fontSize: 18)),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                foregroundColor:
+                    MaterialStateProperty.all<Color>(Colors.red[500]),
+                side: MaterialStateProperty.all<BorderSide>(
+                    BorderSide(width: 1, color: Colors.red[500])),
+                padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                    EdgeInsets.all(16)),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+              })),
+      Spacer(flex: 1),
+      Expanded(
+          flex: 3,
+          child: ElevatedButton(
+              child: Text("Save ${type}", style: TextStyle(fontSize: 18)),
+              style: ButtonStyle(
+                backgroundColor:
+                    MaterialStateProperty.all<Color>(TYPE_COLORS[event.type]),
+                foregroundColor: MaterialStateProperty.all<Color>(Colors.black),
+                side: MaterialStateProperty.all<BorderSide>(
+                    BorderSide(width: 1, color: Colors.black)),
+                padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                    EdgeInsets.all(16)),
+              ),
+              onPressed: () {
+                Provider.of<Model>(context, listen: false)
+                    .updateEvent(event, originalDate, selectedDate, _controller.text);
+
+                Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+              })),
+    ]);
+  }
+
+  Widget _textField(BuildContext context) {
+    return TextField(
+        controller: _controller,
+        textCapitalization: TextCapitalization.sentences,
+        maxLength: 800,
+        maxLines: 16,
+        minLines: 8,
+        decoration: InputDecoration(
+            alignLabelWithHint: true,
+            border: OutlineInputBorder(),
+            labelText: "What's going on?"));
+  }
+
+  Widget _datePicker(BuildContext context) {
+    String date = DateFormat.MMMMEEEEd().format(selectedDate);
+    return Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.black, width: 1),
+        ),
+        margin: EdgeInsets.only(right: 96.0, bottom: 18.0, top: 18.0),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+                child: Container(
+                    padding: EdgeInsets.only(left: 12),
+                    child: Text(
+                      "${date}",
+                      style: TextStyle(fontSize: 18),
+                    ))),
+            Ink(
+                decoration: BoxDecoration(color: Colors.grey[300]),
+                child: IconButton(
+                  icon: Icon(Icons.event),
+                  tooltip: 'Change Date',
+                  onPressed: () => _selectDate(context),
+                  color: Colors.black,
+                )),
+          ],
+        ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+        child: Container(
+            padding: EdgeInsets.all(12.0),
+            child: Column(children: <Widget>[
+              _datePicker(context),
+              _textField(context),
+              _buttons(context),
+            ])));
+  }
+}
+
 
 class CreatePageContainer extends StatelessWidget {
   final EventType _eventType;

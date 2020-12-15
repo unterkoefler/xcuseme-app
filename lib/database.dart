@@ -52,6 +52,16 @@ class DatabaseHelper {
     return await db.insert(table, row);
   }
 
+  Future<void> update(int millis, Map<String, dynamic> newRow) async {
+    Database db = await instance.database;
+    await db.update(
+      table,
+      newRow,
+      where: "${columnMillis} = ?",
+      whereArgs: [millis],
+    );
+  }
+
   Future<List<Map<String, dynamic>>> queryAllRows() async {
     Database db = await instance.database;
     return await db.query(table);

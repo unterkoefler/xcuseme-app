@@ -49,6 +49,27 @@ class Model extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateEvent(Event oldEvent, DateTime oldDate, DateTime newDate, String newDescription) async {
+    if (oldEvent.description == newDescription && oldDate == newDate) {
+      return;
+    }
+    int oldMillis = oldDate.millisecondsSinceEpoch;
+    int newMillis = newDate.millisecondsSinceEpoch;
+    String type_str = TYPE_STRINGS[oldEvent.type];
+    Map<String, dynamic> newRow = {
+      DatabaseHelper.columnMillis: newMillis,
+      DatabaseHelper.columnType: type_str,
+      DatabaseHelper.columnDescription: newDescription,
+    };
+    await dbHelper.update(oldMillis, newRow);
+    if (oldDate == newDate) {
+      oldEvent.description = newDescription;
+    } else {
+      events[newDate] = new Event(oldEvent.type, newDescription);
+    }
+    notifyListeners();
+  }
+
   void toggleMainView() {
       switch (this.mainView) {
           case MainView.CALENDAR:
