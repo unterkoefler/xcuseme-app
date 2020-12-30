@@ -471,6 +471,7 @@ class XCuseCalendar extends StatelessWidget {
   Widget _calendar(BuildContext context) {
     return TableCalendar(
       calendarController: _calendarController,
+      initialSelectedDay: model.selectedDay ?? DateTime.now(),
       endDay: DateTime.now(),
       events: _events_for_cal,
       calendarStyle: CalendarStyle(

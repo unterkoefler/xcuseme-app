@@ -46,7 +46,11 @@ class Model extends ChangeNotifier {
       DatabaseHelper.columnDescription: description,
     };
     await dbHelper.insert(row);
-    _events.add(Event(type, description, millis));
+    Event event = Event(type, description, millis);
+    _events.add(event);
+    if (when == selectedDay) {
+      eventForSelectedDay = event;
+    }
     notifyListeners();
   }
 
