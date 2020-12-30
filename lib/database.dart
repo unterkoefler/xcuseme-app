@@ -62,6 +62,15 @@ class DatabaseHelper {
     );
   }
 
+  Future<void> delete(int millis) async {
+    Database db = await instance.database;
+    await db.delete(
+      table,
+      where: "${columnMillis} = ?",
+      whereArgs: [millis],
+    );
+  }
+
   Future<List<Map<String, dynamic>>> queryAllRows() async {
     Database db = await instance.database;
     return await db.query(table);

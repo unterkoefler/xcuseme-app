@@ -641,16 +641,15 @@ class _EditPageState extends State<EditPage> {
         decoration: BoxDecoration(
           border: Border.all(color: Colors.black, width: 1),
         ),
-        margin: EdgeInsets.only(right: 96.0, bottom: 18.0, top: 18.0),
+        margin: EdgeInsets.only(right: 18.0, bottom: 18.0, top: 18.0),
         child: Row(
           children: <Widget>[
-            Expanded(
-                child: Container(
-                    padding: EdgeInsets.only(left: 12),
-                    child: Text(
-                      "${date}",
-                      style: TextStyle(fontSize: 18),
-                    ))),
+            Container(
+              padding: EdgeInsets.only(left: 12, right: 12),
+                child: Text(
+                  "${date}",
+                  style: TextStyle(fontSize: 18),
+              )),
             Ink(
                 decoration: BoxDecoration(color: Colors.grey[300]),
                 child: IconButton(
@@ -663,13 +662,56 @@ class _EditPageState extends State<EditPage> {
         ));
   }
 
+  Widget _deleteButton(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.delete, color: Colors.blue[800], size: 36),
+      onPressed: () => _showDeleteDialog(context),
+    );
+  }
+
+  Future _showDeleteDialog(BuildContext context) async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Delete? Are you sure?"),
+          content: Text('This cannot be undone.'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.pop(context);
+              }
+            ),
+            TextButton(
+              child: Text('Delete'),
+              onPressed: () async {
+                await Provider.of<Model>(context, listen: false)
+                    .deleteEvent(event);
+                Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+              }
+            ),
+          ],
+        );
+      }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
         child: Container(
             padding: EdgeInsets.all(12.0),
             child: Column(children: <Widget>[
-              _datePicker(context),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  _datePicker(context),
+                  Spacer(flex: 1),
+                  _deleteButton(context),
+                ],
+              ),
               _textField(context),
               _buttons(context),
             ])));

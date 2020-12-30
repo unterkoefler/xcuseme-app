@@ -76,6 +76,15 @@ class Model extends ChangeNotifier {
     return oldEvent;
   }
 
+  Future<void> deleteEvent(Event event) async {
+    _events.remove(event);
+    await dbHelper.delete(event.millis);
+    if (eventForSelectedDay == event) {
+      eventForSelectedDay = null;
+    }
+    notifyListeners();
+  }
+
   void toggleMainView() {
       switch (this.mainView) {
           case MainView.CALENDAR:
