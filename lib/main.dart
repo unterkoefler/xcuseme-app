@@ -727,7 +727,7 @@ class CreatePageContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<Model>(builder: (context, model, child) {
-      return CreatePage(_eventType, model.selectedDay);
+      return CreatePage(_eventType, model.selectedDay, model.events);
     });
   }
 }
@@ -735,19 +735,21 @@ class CreatePageContainer extends StatelessWidget {
 class CreatePage extends StatefulWidget {
   final EventType _eventType;
   final DateTime _selectedDay;
+  final List<Event> _events;
 
-  CreatePage(this._eventType, this._selectedDay);
+  CreatePage(this._eventType, this._selectedDay, this._events);
 
   @override
-  _CreatePageState createState() => _CreatePageState(_eventType, _selectedDay);
+  _CreatePageState createState() => _CreatePageState(_eventType, _selectedDay, _events);
 }
 
 class _CreatePageState extends State<CreatePage> {
   DateTime selectedDate;
   final EventType _eventType;
+  final List<Event> _events;
   TextEditingController _controller;
 
-  _CreatePageState(this._eventType, this.selectedDate);
+  _CreatePageState(this._eventType, this.selectedDate, this._events);
 
   void initState() {
     super.initState();
@@ -767,11 +769,49 @@ class _CreatePageState extends State<CreatePage> {
       lastDate: DateTime.now(),
     );
     if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-      });
+	  if (_dateIsUnique(picked)) {
+      	setState(() {
+        	selectedDate = picked;
+      	});
+	  } else {
+        await _showNonUniqueDateDialog(context, picked);
+      }
     }
   }
+
+  bool _dateIsUnique(DateTime selectedDT) {
+	return !this._events.any((event) {
+		return _isSameDay(event.datetime, selectedDT);
+	  }
+	);
+  }
+
+  Future _showNonUniqueDateDialog(BuildContext context, DateTime selectedDT) async {
+    Event e = this._events.firstWhere((event) => _isSameDay(event.datetime, selectedDT));
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String date = DateFormat.MMMMEEEEd().format(selectedDT);
+        return AlertDialog(
+          title: Text("Invalid Date Selected"),
+          content: Text('There is already an event logged for ${date}. Would you like to go edit that one instead?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.pop(context);
+              }
+            ),
+            TextButton(
+              child: Text('Yes'),
+              onPressed: () => Navigator.pushNamed(context, '/edit', arguments: e)
+            ),
+          ],
+        );
+      }
+    );
+  }
+
 
   Widget _buttons(BuildContext context) {
     String type = STRINGS[_eventType];
@@ -807,9 +847,13 @@ class _CreatePageState extends State<CreatePage> {
                     EdgeInsets.all(16)),
               ),
               onPressed: () {
-                Provider.of<Model>(context, listen: false)
-                    .addEvent(selectedDate, _controller.text, _eventType);
-                Navigator.pop(context);
+                if (_dateIsUnique(selectedDate)) {
+                  Provider.of<Model>(context, listen: false)
+                      .addEvent(selectedDate, _controller.text, _eventType);
+                  Navigator.pop(context);
+                } else {
+                  _showNonUniqueDateDialog(context, selectedDate);
+                }
               })),
     ]);
   }
@@ -866,4 +910,10 @@ class _CreatePageState extends State<CreatePage> {
               _buttons(context),
             ])));
   }
+}
+
+bool _isSameDay(DateTime dayA, DateTime dayB) {
+  return dayA.year == dayB.year &&
+      dayA.month == dayB.month &&
+      dayA.day == dayB.day;
 }
