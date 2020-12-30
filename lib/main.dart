@@ -531,34 +531,139 @@ class XCuseCalendar extends StatelessWidget {
 }
 
 class EditPageContainer extends StatelessWidget {
+
+  Future<void> _onSave(BuildContext context, DateTime selectedDay, String description, EventType eventType, Event event)  async {
+    Event newEvent = await Provider.of<Model>(context, listen: false)
+      .updateEvent(event, selectedDay, description);
+
+    Navigator.pushNamedAndRemoveUntil(context, '/details', (route) => route.isFirst, arguments: newEvent);
+  }
+
+  Widget _deleteButton(BuildContext context, Event e) {
+    return IconButton(
+      icon: Icon(Icons.delete, color: Colors.blue[800], size: 36),
+      onPressed: () => _showDeleteDialog(context, e),
+    );
+  }
+
+  Future _showDeleteDialog(BuildContext context, Event e) async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Delete? Are you sure?"),
+          content: Text('This cannot be undone.'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.pop(context);
+              }
+            ),
+            TextButton(
+              child: Text('Delete'),
+              onPressed: () async {
+                await Provider.of<Model>(context, listen: false)
+                    .deleteEvent(e);
+                Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+              }
+            ),
+          ],
+        );
+      }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final Event event = ModalRoute.of(context).settings.arguments;
-    return EditPage(event);
+    return Consumer<Model>(builder: (context, model, child) {
+      return CreateOrEditPage(
+        eventType: event.type,
+        selectedDay: event.datetime,
+        events: model.events,
+        onSave: _onSave,
+        event: event,
+        rightButton: _deleteButton(context, event),
+      );
+    });
   }
 }
 
-class EditPage extends StatefulWidget {
-  final Event event;
+class CreatePageContainer extends StatelessWidget {
+  final EventType _eventType;
 
-  EditPage(this.event);
+  CreatePageContainer(this._eventType);
+
+  void _onSave(BuildContext context, DateTime selectedDay, String description, EventType eventType, Event _) {
+    Provider.of<Model>(context, listen: false)
+      .addEvent(selectedDay, description, eventType);
+    Navigator.pop(context);
+  }
 
   @override
-  _EditPageState createState() => _EditPageState(event);
+  Widget build(BuildContext context) {
+    return Consumer<Model>(builder: (context, model, child) {
+      return CreateOrEditPage(
+        eventType: _eventType,
+        selectedDay: model.selectedDay,
+        events: model.events,
+        onSave: _onSave,
+      );
+    });
+  }
 }
 
-class _EditPageState extends State<EditPage> {
-  DateTime selectedDate;
-  final Event event;
+class CreateOrEditPage extends StatefulWidget {
+  final EventType eventType;
+  final DateTime selectedDay;
+  final List<Event> events;
+  final Function onSave;
+  final Event event; // null if and only if creating
+  final Widget rightButton;
+
+  CreateOrEditPage({
+    this.eventType,
+    this.events,
+    this.selectedDay,
+    this.onSave,
+    this.event = null,
+    this.rightButton = null,
+  });
+
+  @override
+  _CreateOrEditPageState createState() => _CreateOrEditPageState(
+    eventType: eventType,
+    selectedDay: selectedDay,
+    events: events,
+    onSave: onSave,
+    event: event,
+    rightButton: rightButton,
+  );
+}
+
+class _CreateOrEditPageState extends State<CreateOrEditPage> {
+  final EventType eventType;
+  final List<Event> events;
+  final Function onSave;
+  final Event event; // null if and only if creating
+  final Widget rightButton;
+  DateTime selectedDay;
   TextEditingController _controller;
 
-  _EditPageState(this.event) {
-    this.selectedDate = this.event.datetime;
-  }
+  _CreateOrEditPageState({
+    this.eventType,
+    this.events,
+    this.selectedDay,
+    this.onSave,
+    this.event = null,
+    this.rightButton = null,
+  });
 
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: event.description);
+    String text = event?.description ?? '';
+    _controller = TextEditingController(text: text);
   }
 
   void dispose() {
@@ -569,19 +674,61 @@ class _EditPageState extends State<EditPage> {
   _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
-      firstDate: selectedDate.subtract(new Duration(days: 600)),
+      initialDate: selectedDay,
+      firstDate: selectedDay.subtract(new Duration(days: 600)),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-      });
+    if (picked != null && picked != selectedDay) {
+	  if (_dateIsUnique(picked)) {
+      	setState(() {
+        	selectedDay = picked;
+      	});
+	  } else {
+        await _showNonUniqueDateDialog(context, picked);
+      }
     }
   }
 
+  bool _dateIsUnique(DateTime selectedDT) {
+    if (this.event != null && _isSameDay(selectedDT, this.event.datetime)) {
+      // we must be editing an event. It's okay to have an event with the same day as itself
+      return true;
+    }
+	return !this.events.any((event) {
+		return _isSameDay(event.datetime, selectedDT);
+	  }
+	);
+  }
+
+  Future _showNonUniqueDateDialog(BuildContext context, DateTime selectedDT) async {
+    Event e = this.events.firstWhere((ev) => _isSameDay(ev.datetime, selectedDT));
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String date = DateFormat.MMMMEEEEd().format(selectedDT);
+        return AlertDialog(
+          title: Text("Invalid Date Selected"),
+          content: Text('There is already an event logged for ${date}. Would you like to go edit that one instead?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.pop(context);
+              }
+            ),
+            TextButton(
+              child: Text('Yes'),
+              onPressed: () => Navigator.popAndPushNamed(context, '/edit', arguments: e)
+            ),
+          ],
+        );
+      }
+    );
+  }
+
+
   Widget _buttons(BuildContext context) {
-    String type = STRINGS[event.type];
+    String type = STRINGS[eventType];
     return Row(children: <Widget>[
       Expanded(
           flex: 3,
@@ -606,18 +753,19 @@ class _EditPageState extends State<EditPage> {
               child: Text("Save ${type}", style: TextStyle(fontSize: 18)),
               style: ButtonStyle(
                 backgroundColor:
-                    MaterialStateProperty.all<Color>(TYPE_COLORS[event.type]),
+                    MaterialStateProperty.all<Color>(TYPE_COLORS[eventType]),
                 foregroundColor: MaterialStateProperty.all<Color>(Colors.black),
                 side: MaterialStateProperty.all<BorderSide>(
                     BorderSide(width: 1, color: Colors.black)),
                 padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
                     EdgeInsets.all(16)),
               ),
-              onPressed: () async {
-                Event newEvent = await Provider.of<Model>(context, listen: false)
-                    .updateEvent(event, selectedDate, _controller.text);
-
-                Navigator.pushNamedAndRemoveUntil(context, '/details', (route) => route.isFirst, arguments: newEvent);
+              onPressed: () {
+                if (_dateIsUnique(selectedDay)) {
+                  this.onSave(context, selectedDay, _controller.text, eventType, event);
+                } else {
+                  _showNonUniqueDateDialog(context, selectedDay);
+                }
               })),
     ]);
   }
@@ -636,7 +784,7 @@ class _EditPageState extends State<EditPage> {
   }
 
   Widget _datePicker(BuildContext context) {
-    String date = DateFormat.MMMMEEEEd().format(selectedDate);
+    String date = DateFormat.MMMMEEEEd().format(selectedDay);
     return Container(
         decoration: BoxDecoration(
           border: Border.all(color: Colors.black, width: 1),
@@ -662,242 +810,20 @@ class _EditPageState extends State<EditPage> {
         ));
   }
 
-  Widget _deleteButton(BuildContext context) {
-    return IconButton(
-      icon: Icon(Icons.delete, color: Colors.blue[800], size: 36),
-      onPressed: () => _showDeleteDialog(context),
-    );
-  }
-
-  Future _showDeleteDialog(BuildContext context) async {
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Delete? Are you sure?"),
-          content: Text('This cannot be undone.'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.pop(context);
-              }
-            ),
-            TextButton(
-              child: Text('Delete'),
-              onPressed: () async {
-                await Provider.of<Model>(context, listen: false)
-                    .deleteEvent(event);
-                Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
-              }
-            ),
-          ],
-        );
+  Widget _topRow(BuildContext context) {
+      List<Widget> children = [
+          _datePicker(context),
+          Spacer(flex: 1),
+        ];
+      if (rightButton != null) {
+        children.add(rightButton);
       }
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-        child: Container(
-            padding: EdgeInsets.all(12.0),
-            child: Column(children: <Widget>[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  _datePicker(context),
-                  Spacer(flex: 1),
-                  _deleteButton(context),
-                ],
-              ),
-              _textField(context),
-              _buttons(context),
-            ])));
-  }
-}
-
-
-class CreatePageContainer extends StatelessWidget {
-  final EventType _eventType;
-
-  CreatePageContainer(this._eventType);
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<Model>(builder: (context, model, child) {
-      return CreatePage(_eventType, model.selectedDay, model.events);
-    });
-  }
-}
-
-class CreatePage extends StatefulWidget {
-  final EventType _eventType;
-  final DateTime _selectedDay;
-  final List<Event> _events;
-
-  CreatePage(this._eventType, this._selectedDay, this._events);
-
-  @override
-  _CreatePageState createState() => _CreatePageState(_eventType, _selectedDay, _events);
-}
-
-class _CreatePageState extends State<CreatePage> {
-  DateTime selectedDate;
-  final EventType _eventType;
-  final List<Event> _events;
-  TextEditingController _controller;
-
-  _CreatePageState(this._eventType, this.selectedDate, this._events);
-
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-  }
-
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  _selectDate(BuildContext context) async {
-    final DateTime picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: selectedDate.subtract(new Duration(days: 600)),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null && picked != selectedDate) {
-	  if (_dateIsUnique(picked)) {
-      	setState(() {
-        	selectedDate = picked;
-      	});
-	  } else {
-        await _showNonUniqueDateDialog(context, picked);
-      }
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
+        children: children,
+      );
     }
-  }
-
-  bool _dateIsUnique(DateTime selectedDT) {
-	return !this._events.any((event) {
-		return _isSameDay(event.datetime, selectedDT);
-	  }
-	);
-  }
-
-  Future _showNonUniqueDateDialog(BuildContext context, DateTime selectedDT) async {
-    Event e = this._events.firstWhere((event) => _isSameDay(event.datetime, selectedDT));
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        String date = DateFormat.MMMMEEEEd().format(selectedDT);
-        return AlertDialog(
-          title: Text("Invalid Date Selected"),
-          content: Text('There is already an event logged for ${date}. Would you like to go edit that one instead?'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('No'),
-              onPressed: () {
-                Navigator.pop(context);
-              }
-            ),
-            TextButton(
-              child: Text('Yes'),
-              onPressed: () => Navigator.pushNamed(context, '/edit', arguments: e)
-            ),
-          ],
-        );
-      }
-    );
-  }
-
-
-  Widget _buttons(BuildContext context) {
-    String type = STRINGS[_eventType];
-    return Row(children: <Widget>[
-      Expanded(
-          flex: 3,
-          child: ElevatedButton(
-              child: Text("Cancel", style: TextStyle(fontSize: 18)),
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(Colors.white),
-                foregroundColor:
-                    MaterialStateProperty.all<Color>(Colors.red[500]),
-                side: MaterialStateProperty.all<BorderSide>(
-                    BorderSide(width: 1, color: Colors.red[500])),
-                padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                    EdgeInsets.all(16)),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-              })),
-      Spacer(flex: 1),
-      Expanded(
-          flex: 3,
-          child: ElevatedButton(
-              child: Text("Save ${type}", style: TextStyle(fontSize: 18)),
-              style: ButtonStyle(
-                backgroundColor:
-                    MaterialStateProperty.all<Color>(TYPE_COLORS[_eventType]),
-                foregroundColor: MaterialStateProperty.all<Color>(Colors.black),
-                side: MaterialStateProperty.all<BorderSide>(
-                    BorderSide(width: 1, color: Colors.black)),
-                padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                    EdgeInsets.all(16)),
-              ),
-              onPressed: () {
-                if (_dateIsUnique(selectedDate)) {
-                  Provider.of<Model>(context, listen: false)
-                      .addEvent(selectedDate, _controller.text, _eventType);
-                  Navigator.pop(context);
-                } else {
-                  _showNonUniqueDateDialog(context, selectedDate);
-                }
-              })),
-    ]);
-  }
-
-  Widget _textField(BuildContext context) {
-    return TextField(
-        controller: _controller,
-        textCapitalization: TextCapitalization.sentences,
-        maxLength: 800,
-        maxLines: 16,
-        minLines: 8,
-        decoration: InputDecoration(
-            alignLabelWithHint: true,
-            border: OutlineInputBorder(),
-            labelText: "What's going on?"));
-  }
-
-  Widget _datePicker(BuildContext context) {
-    String date = DateFormat.MMMMEEEEd().format(selectedDate);
-    return Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: 1),
-        ),
-        margin: EdgeInsets.only(right: 96.0, bottom: 18.0, top: 18.0),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-                child: Container(
-                    padding: EdgeInsets.only(left: 12),
-                    child: Text(
-                      "${date}",
-                      style: TextStyle(fontSize: 18),
-                    ))),
-            Ink(
-                decoration: BoxDecoration(color: Colors.grey[300]),
-                child: IconButton(
-                  icon: Icon(Icons.event),
-                  tooltip: 'Change Date',
-                  onPressed: () => _selectDate(context),
-                  color: Colors.black,
-                )),
-          ],
-        ));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -905,7 +831,7 @@ class _CreatePageState extends State<CreatePage> {
         child: Container(
             padding: EdgeInsets.all(12.0),
             child: Column(children: <Widget>[
-              _datePicker(context),
+              _topRow(context),
               _textField(context),
               _buttons(context),
             ])));
