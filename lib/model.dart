@@ -22,12 +22,12 @@ class Model extends ChangeNotifier {
     List<Event> new_events = [];
     rows.forEach((row) {
       int millis = row[DatabaseHelper.columnMillis];
-      DateTime dt =
-          DateTime.fromMillisecondsSinceEpoch(millis);
+      DateTime dt = DateTime.fromMillisecondsSinceEpoch(millis);
       EventType type = row[DatabaseHelper.columnType] == 'EXCUSE'
           ? EventType.EXCUSE
           : EventType.EXERCISE;
-      new_events.add(Event(type, row[DatabaseHelper.columnDescription], millis));
+      new_events
+          .add(Event(type, row[DatabaseHelper.columnDescription], millis));
     });
     _events = new_events;
     print("loaded data");
@@ -54,8 +54,10 @@ class Model extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Event> updateEvent(Event oldEvent, DateTime newDate, String newDescription) async {
-    if (oldEvent.description == newDescription && oldEvent.datetime == newDate) {
+  Future<Event> updateEvent(
+      Event oldEvent, DateTime newDate, String newDescription) async {
+    if (oldEvent.description == newDescription &&
+        oldEvent.datetime == newDate) {
       return oldEvent;
     }
     int oldMillis = oldEvent.millis;
@@ -86,15 +88,15 @@ class Model extends ChangeNotifier {
   }
 
   void toggleMainView() {
-      switch (this.mainView) {
-          case MainView.CALENDAR:
-            this.mainView = MainView.LIST;
-            break;
-          case MainView.LIST:
-            this.mainView = MainView.CALENDAR;
-            break;
-      }
-      notifyListeners();
+    switch (this.mainView) {
+      case MainView.CALENDAR:
+        this.mainView = MainView.LIST;
+        break;
+      case MainView.LIST:
+        this.mainView = MainView.CALENDAR;
+        break;
+    }
+    notifyListeners();
   }
 
   void updateSelectedDay(DateTime newDay, Event event) {

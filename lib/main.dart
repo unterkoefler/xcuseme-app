@@ -179,31 +179,32 @@ class DetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Event event = ModalRoute.of(context).settings.arguments;
-    final DateTime dt = event.datetime;;
+    final DateTime dt = event.datetime;
     final String title = '${STRINGS[event.type]} Details';
     final Color color = TYPE_COLORS[event.type];
     String date = DateFormat.MMMMEEEEd().format(dt);
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            padding: EdgeInsets.all(24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text(title, style: TextStyle(color: color, fontSize: 36)),
-                _editButton(context, event),
-              ],
-            ),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          padding: EdgeInsets.all(24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text(title, style: TextStyle(color: color, fontSize: 36)),
+              _editButton(context, event),
+            ],
           ),
-          Container(
-            padding: EdgeInsets.only(left: 24, right: 24, bottom: 12),
-            child: Text(date, style: TextStyle(fontStyle: FontStyle.italic, fontSize: 18)),
-          ),
-          Container(
-            padding: EdgeInsets.only(left: 24, right: 24, top: 12),
-            child: Text(event.description, style: TextStyle(fontSize: 16)),
-          ),
+        ),
+        Container(
+          padding: EdgeInsets.only(left: 24, right: 24, bottom: 12),
+          child: Text(date,
+              style: TextStyle(fontStyle: FontStyle.italic, fontSize: 18)),
+        ),
+        Container(
+          padding: EdgeInsets.only(left: 24, right: 24, top: 12),
+          child: Text(event.description, style: TextStyle(fontSize: 16)),
+        ),
       ],
     );
   }
@@ -274,7 +275,8 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(child: Column(
+    return SingleChildScrollView(
+        child: Column(
       children: <Widget>[
         _logButton(context, EventType.EXCUSE),
         _logButton(context, EventType.EXERCISE),
@@ -323,11 +325,9 @@ class HomePageMainView extends StatelessWidget {
               semanticLabel: labels[model.mainView],
             ),
             onPressed: () => model.toggleMainView(),
-          )
-        ),
+          )),
     );
   }
-
 
   Widget build(BuildContext context) {
     return Column(
@@ -349,15 +349,16 @@ class XCuseList extends StatelessWidget {
     events.sort((a, b) => b.millis.compareTo(a.millis));
 
     return SizedBox(
-      height: 500, // TODO: make relative to device
-      child: ListView.separated(
-      itemCount: events.length,
-      itemBuilder: (BuildContext context, int index) {
-        Event e = events.elementAt(index);
-        return EventTile(e);
-      },
-      separatorBuilder: (BuildContext context, int index) => const Divider(),
-    ));
+        height: 500, // TODO: make relative to device
+        child: ListView.separated(
+          itemCount: events.length,
+          itemBuilder: (BuildContext context, int index) {
+            Event e = events.elementAt(index);
+            return EventTile(e);
+          },
+          separatorBuilder: (BuildContext context, int index) =>
+              const Divider(),
+        ));
   }
 }
 
@@ -383,17 +384,20 @@ class EventTile extends StatelessWidget {
     return ListTile(
       onTap: () => Navigator.pushNamed(context, '/details', arguments: event),
       leading: _icon(context),
-      title: Text(title, softWrap: false, overflow: TextOverflow.ellipsis,),
+      title: Text(
+        title,
+        softWrap: false,
+        overflow: TextOverflow.ellipsis,
+      ),
       trailing: SizedBox(
-            height: double.infinity,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text("Details", style: TextStyle(color: Colors.blueGrey[300])),
-                Icon(Icons.navigate_next, size: 24, color: Colors.blueGrey[300]),
-              ],
-            )
-          ),
+          height: double.infinity,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text("Details", style: TextStyle(color: Colors.blueGrey[300])),
+              Icon(Icons.navigate_next, size: 24, color: Colors.blueGrey[300]),
+            ],
+          )),
     );
   }
 }
@@ -405,7 +409,9 @@ class CreateEventTile extends StatelessWidget {
     Color color = TYPE_COLORS[type];
 
     return SimpleDialogOption(
-      onPressed: () { Navigator.pushReplacementNamed(context, next); },
+      onPressed: () {
+        Navigator.pushReplacementNamed(context, next);
+      },
       child: Text(label, style: TextStyle(fontSize: 24, color: color)),
     );
   }
@@ -425,7 +431,6 @@ class CreateEventTile extends StatelessWidget {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return ListTile(
@@ -433,14 +438,14 @@ class CreateEventTile extends StatelessWidget {
       title: Text('Nothing logged for selected day'),
       onTap: () => _showDialog(context),
       trailing: SizedBox(
-          height: double.infinity,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text('Add', style: TextStyle(color: Colors.blueGrey[300])),
-              Icon(Icons.navigate_next, size: 24, color: Colors.blueGrey[300]),
-            ],
-          ),
+        height: double.infinity,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text('Add', style: TextStyle(color: Colors.blueGrey[300])),
+            Icon(Icons.navigate_next, size: 24, color: Colors.blueGrey[300]),
+          ],
+        ),
       ),
     );
   }
@@ -535,12 +540,14 @@ class XCuseCalendar extends StatelessWidget {
 }
 
 class EditPageContainer extends StatelessWidget {
-
-  Future<void> _onSave(BuildContext context, DateTime selectedDay, String description, EventType eventType, Event event)  async {
+  Future<void> _onSave(BuildContext context, DateTime selectedDay,
+      String description, EventType eventType, Event event) async {
     Event newEvent = await Provider.of<Model>(context, listen: false)
-      .updateEvent(event, selectedDay, description);
+        .updateEvent(event, selectedDay, description);
 
-    Navigator.pushNamedAndRemoveUntil(context, '/details', (route) => route.isFirst, arguments: newEvent);
+    Navigator.pushNamedAndRemoveUntil(
+        context, '/details', (route) => route.isFirst,
+        arguments: newEvent);
   }
 
   Widget _deleteButton(BuildContext context, Event e) {
@@ -552,30 +559,28 @@ class EditPageContainer extends StatelessWidget {
 
   Future _showDeleteDialog(BuildContext context, Event e) async {
     await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Delete? Are you sure?"),
-          content: Text('This cannot be undone.'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.pop(context);
-              }
-            ),
-            TextButton(
-              child: Text('Delete'),
-              onPressed: () async {
-                await Provider.of<Model>(context, listen: false)
-                    .deleteEvent(e);
-                Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
-              }
-            ),
-          ],
-        );
-      }
-    );
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Delete? Are you sure?"),
+            content: Text('This cannot be undone.'),
+            actions: <Widget>[
+              TextButton(
+                  child: Text('Cancel'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  }),
+              TextButton(
+                  child: Text('Delete'),
+                  onPressed: () async {
+                    await Provider.of<Model>(context, listen: false)
+                        .deleteEvent(e);
+                    Navigator.pushNamedAndRemoveUntil(
+                        context, '/', (_) => false);
+                  }),
+            ],
+          );
+        });
   }
 
   @override
@@ -599,9 +604,10 @@ class CreatePageContainer extends StatelessWidget {
 
   CreatePageContainer(this._eventType);
 
-  void _onSave(BuildContext context, DateTime selectedDay, String description, EventType eventType, Event _) {
+  void _onSave(BuildContext context, DateTime selectedDay, String description,
+      EventType eventType, Event _) {
     Provider.of<Model>(context, listen: false)
-      .addEvent(selectedDay, description, eventType);
+        .addEvent(selectedDay, description, eventType);
     Navigator.pop(context);
   }
 
@@ -637,13 +643,13 @@ class CreateOrEditPage extends StatefulWidget {
 
   @override
   _CreateOrEditPageState createState() => _CreateOrEditPageState(
-    eventType: eventType,
-    selectedDay: selectedDay,
-    events: events,
-    onSave: onSave,
-    event: event,
-    rightButton: rightButton,
-  );
+        eventType: eventType,
+        selectedDay: selectedDay,
+        events: events,
+        onSave: onSave,
+        event: event,
+        rightButton: rightButton,
+      );
 }
 
 class _CreateOrEditPageState extends State<CreateOrEditPage> {
@@ -683,11 +689,11 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
       lastDate: DateTime.now(),
     );
     if (picked != null && picked != selectedDay) {
-	  if (_dateIsUnique(picked)) {
-      	setState(() {
-        	selectedDay = picked;
-      	});
-	  } else {
+      if (_dateIsUnique(picked)) {
+        setState(() {
+          selectedDay = picked;
+        });
+      } else {
         await _showNonUniqueDateDialog(context, picked);
       }
     }
@@ -698,38 +704,37 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
       // we must be editing an event. It's okay to have an event with the same day as itself
       return true;
     }
-	return !this.events.any((event) {
-		return _isSameDay(event.datetime, selectedDT);
-	  }
-	);
+    return !this.events.any((event) {
+      return _isSameDay(event.datetime, selectedDT);
+    });
   }
 
-  Future _showNonUniqueDateDialog(BuildContext context, DateTime selectedDT) async {
-    Event e = this.events.firstWhere((ev) => _isSameDay(ev.datetime, selectedDT));
+  Future _showNonUniqueDateDialog(
+      BuildContext context, DateTime selectedDT) async {
+    Event e =
+        this.events.firstWhere((ev) => _isSameDay(ev.datetime, selectedDT));
     await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        String date = DateFormat.MMMMEEEEd().format(selectedDT);
-        return AlertDialog(
-          title: Text("Invalid Date Selected"),
-          content: Text('There is already an event logged for ${date}. Would you like to go edit that one instead?'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('No'),
-              onPressed: () {
-                Navigator.pop(context);
-              }
-            ),
-            TextButton(
-              child: Text('Yes'),
-              onPressed: () => Navigator.popAndPushNamed(context, '/edit', arguments: e)
-            ),
-          ],
-        );
-      }
-    );
+        context: context,
+        builder: (BuildContext context) {
+          String date = DateFormat.MMMMEEEEd().format(selectedDT);
+          return AlertDialog(
+            title: Text("Invalid Date Selected"),
+            content: Text(
+                'There is already an event logged for ${date}. Would you like to go edit that one instead?'),
+            actions: <Widget>[
+              TextButton(
+                  child: Text('No'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  }),
+              TextButton(
+                  child: Text('Yes'),
+                  onPressed: () => Navigator.popAndPushNamed(context, '/edit',
+                      arguments: e)),
+            ],
+          );
+        });
   }
-
 
   Widget _buttons(BuildContext context) {
     String type = STRINGS[eventType];
@@ -766,7 +771,8 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
               ),
               onPressed: () {
                 if (_dateIsUnique(selectedDay)) {
-                  this.onSave(context, selectedDay, _controller.text, eventType, event);
+                  this.onSave(
+                      context, selectedDay, _controller.text, eventType, event);
                 } else {
                   _showNonUniqueDateDialog(context, selectedDay);
                 }
@@ -797,11 +803,11 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
         child: Row(
           children: <Widget>[
             Container(
-              padding: EdgeInsets.only(left: 12, right: 12),
+                padding: EdgeInsets.only(left: 12, right: 12),
                 child: Text(
                   "${date}",
                   style: TextStyle(fontSize: 18),
-              )),
+                )),
             Ink(
                 decoration: BoxDecoration(color: Colors.grey[300]),
                 child: IconButton(
@@ -815,19 +821,19 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
   }
 
   Widget _topRow(BuildContext context) {
-      List<Widget> children = [
-          _datePicker(context),
-          Spacer(flex: 1),
-        ];
-      if (rightButton != null) {
-        children.add(rightButton);
-      }
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        mainAxisSize: MainAxisSize.min,
-        children: children,
-      );
+    List<Widget> children = [
+      _datePicker(context),
+      Spacer(flex: 1),
+    ];
+    if (rightButton != null) {
+      children.add(rightButton);
     }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisSize: MainAxisSize.min,
+      children: children,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
