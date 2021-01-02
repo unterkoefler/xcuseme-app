@@ -265,10 +265,22 @@ class HomePage extends StatelessWidget {
 
   HomePage(this.model);
 
+  bool _shouldDisableLogButtons() {
+    return this.model.events.any((event) {
+      return _isSameDay(event.datetime, model.selectedDay);
+    });
+  }
+
   Widget _logButton(BuildContext context, EventType type) {
     String next = PATHS[type];
     String label = BUTTON_LABELS[type];
-    Color color = TYPE_COLORS[type];
+
+    Color getColor(Set<MaterialState> states) {
+      if (states.contains(MaterialState.disabled)) {
+        return Colors.grey[400];
+      }
+      return TYPE_COLORS[type];
+    }
 
     return Container(
         width: double.infinity,
@@ -276,14 +288,17 @@ class HomePage extends StatelessWidget {
         child: ElevatedButton(
             style: ButtonStyle(
                 padding: MaterialStateProperty.all(EdgeInsets.all(18.0)),
-                backgroundColor: MaterialStateProperty.all(color)),
+                backgroundColor: MaterialStateProperty.resolveWith(getColor),
+                foregroundColor: MaterialStateProperty.all(Colors.white)),
             child: Text(label, textScaleFactor: 2),
-            onPressed: () {
-              Navigator.pushNamed(
-                context,
-                next,
-              );
-            }));
+            onPressed: _shouldDisableLogButtons()
+                ? null
+                : () {
+                    Navigator.pushNamed(
+                      context,
+                      next,
+                    );
+                  }));
   }
 
   Widget _getView(BuildContext context) {
