@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -114,6 +115,9 @@ final Map<EventType, String> STRINGS = {
 class MaybeLoadingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
     return Consumer<Model>(builder: (context, model, child) {
       if (model.loadedData) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
