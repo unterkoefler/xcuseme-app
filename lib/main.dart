@@ -49,8 +49,8 @@ class XCuseMeApp extends StatelessWidget {
       title: 'XCuseMe',
       initialRoute: '/loading',
       routes: {
-        '/': (context) =>
-            XCuseMeScaffold(HomePage(), actions: [InfoAction(selected: false)]),
+        '/': (context) => XCuseMeScaffold(HomePageContainer(),
+            actions: [InfoAction(selected: false)]),
         '/log-excuse': (context) =>
             XCuseMeScaffold(CreatePageContainer(EventType.EXCUSE)),
         '/log-exercise': (context) =>
@@ -251,7 +251,20 @@ Thank you and have a good day!
   }
 }
 
+class HomePageContainer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<Model>(builder: (context, model, child) {
+      return HomePage(model);
+    });
+  }
+}
+
 class HomePage extends StatelessWidget {
+  final Model model;
+
+  HomePage(this.model);
+
   Widget _logButton(BuildContext context, EventType type) {
     String next = PATHS[type];
     String label = BUTTON_LABELS[type];
@@ -272,26 +285,6 @@ class HomePage extends StatelessWidget {
               );
             }));
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-        child: Column(
-      children: <Widget>[
-        _logButton(context, EventType.EXCUSE),
-        _logButton(context, EventType.EXERCISE),
-        Consumer<Model>(builder: (context, model, child) {
-          return HomePageMainView(model);
-        }),
-      ],
-    ));
-  }
-}
-
-class HomePageMainView extends StatelessWidget {
-  final Model model;
-
-  HomePageMainView(this.model);
 
   Widget _getView(BuildContext context) {
     switch (model.mainView) {
@@ -332,6 +325,8 @@ class HomePageMainView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
+        _logButton(context, EventType.EXCUSE),
+        _logButton(context, EventType.EXERCISE),
         _changeViewButton(context),
         _getView(context),
       ],
@@ -346,19 +341,20 @@ class XCuseList extends StatelessWidget {
 
   Widget build(BuildContext context) {
     List<Event> events = model.events;
+    if (events.isEmpty) {
+      return Text("Nothing logged yet...", style: TextStyle(fontSize: 18));
+    }
     events.sort((a, b) => b.millis.compareTo(a.millis));
 
-    return SizedBox(
-        height: 500, // TODO: make relative to device
+    return Expanded(
         child: ListView.separated(
-          itemCount: events.length,
-          itemBuilder: (BuildContext context, int index) {
-            Event e = events.elementAt(index);
-            return EventTile(e);
-          },
-          separatorBuilder: (BuildContext context, int index) =>
-              const Divider(),
-        ));
+      itemCount: events.length,
+      itemBuilder: (BuildContext context, int index) {
+        Event e = events.elementAt(index);
+        return EventTile(e);
+      },
+      separatorBuilder: (BuildContext context, int index) => const Divider(),
+    ));
   }
 }
 
