@@ -9,6 +9,14 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 
+double ICON_SIZE = 30.0;
+double SMALL_ICON_SIZE = 18.0;
+double PARAGRAPH_FONT_SIZE = 14.0;
+double HEADING_FONT_SIZE = 28.0;
+double SMALL_HEADING_FONT_SIZE = 18.0;
+double LOADING_TITLE_FONT_SIZE = 36.0;
+double TITLE_FONT_SIZE = 28.0;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
@@ -32,7 +40,7 @@ class InfoAction extends StatelessWidget {
           icon: Icon(
             Icons.info,
             color: color,
-            size: 36.0,
+            size: ICON_SIZE,
             semanticLabel: 'About this app',
           ),
           onPressed: () => selected
@@ -155,11 +163,13 @@ class LoadingPage extends StatelessWidget {
                 children: <Widget>[
                   Text('XCuseMe',
                       style: TextStyle(
-                          fontSize: 48, color: Colors.deepPurple[500])),
+                          fontSize: LOADING_TITLE_FONT_SIZE,
+                          color: Colors.deepPurple[500])),
+                  SizedBox(height: 8.0),
                   Text('The exercise tracking app for real people',
                       style: TextStyle(
                           fontStyle: FontStyle.italic,
-                          fontSize: 16,
+                          fontSize: PARAGRAPH_FONT_SIZE,
                           color: Colors.black)),
                 ],
               )),
@@ -171,7 +181,7 @@ class LoadingPage extends StatelessWidget {
 class DetailsPage extends StatelessWidget {
   Widget _editButton(BuildContext context, Event e) {
     return IconButton(
-      icon: Icon(Icons.edit, color: Colors.blue[800], size: 36),
+      icon: Icon(Icons.edit, color: Colors.blue[800], size: ICON_SIZE),
       onPressed: () => Navigator.pushNamed(context, '/edit', arguments: e),
     );
   }
@@ -187,23 +197,27 @@ class DetailsPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Container(
-          padding: EdgeInsets.all(24),
+          padding: EdgeInsets.all(18),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text(title, style: TextStyle(color: color, fontSize: 36)),
+              Text(title,
+                  style: TextStyle(color: color, fontSize: HEADING_FONT_SIZE)),
               _editButton(context, event),
             ],
           ),
         ),
         Container(
-          padding: EdgeInsets.only(left: 24, right: 24, bottom: 12),
+          padding: EdgeInsets.only(left: 24, right: 24, bottom: 8),
           child: Text(date,
-              style: TextStyle(fontStyle: FontStyle.italic, fontSize: 18)),
+              style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  fontSize: PARAGRAPH_FONT_SIZE + 2.0)),
         ),
         Container(
-          padding: EdgeInsets.only(left: 24, right: 24, top: 12),
-          child: Text(event.description, style: TextStyle(fontSize: 16)),
+          padding: EdgeInsets.only(left: 24, right: 24, top: 8),
+          child: Text(event.description,
+              style: TextStyle(fontSize: PARAGRAPH_FONT_SIZE)),
         ),
       ],
     );
@@ -233,7 +247,8 @@ Thank you and have a good day!
       child: RichText(
           text: TextSpan(
         text: info_pre,
-        style: TextStyle(color: Colors.black, fontSize: 18, height: 1.5),
+        style: TextStyle(
+            color: Colors.black, fontSize: PARAGRAPH_FONT_SIZE, height: 1.5),
         children: <TextSpan>[
           TextSpan(
             text: 'the Github repository',
@@ -267,7 +282,7 @@ class HomePage extends StatelessWidget {
 
   bool _shouldDisableLogButtons() {
     return this.model.events.any((event) {
-      return _isSameDay(event.datetime, model.selectedDay);
+      return isSameDay(event.datetime, model.selectedDay);
     });
   }
 
@@ -284,13 +299,15 @@ class HomePage extends StatelessWidget {
 
     return Container(
         width: double.infinity,
-        margin: EdgeInsets.all(12.0),
+        margin: EdgeInsets.only(top: 14.0, left: 12.0, right: 12.0),
         child: ElevatedButton(
             style: ButtonStyle(
-                padding: MaterialStateProperty.all(EdgeInsets.all(18.0)),
+                padding: MaterialStateProperty.all(
+                    EdgeInsets.all(SMALL_HEADING_FONT_SIZE)),
                 backgroundColor: MaterialStateProperty.resolveWith(getColor),
                 foregroundColor: MaterialStateProperty.all(Colors.white)),
-            child: Text(label, textScaleFactor: 2),
+            child: Text(label,
+                style: TextStyle(fontSize: SMALL_HEADING_FONT_SIZE)),
             onPressed: _shouldDisableLogButtons()
                 ? null
                 : () {
@@ -322,14 +339,14 @@ class HomePage extends StatelessWidget {
 
   Widget _changeViewButton(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(right: 12.0, top: 6.0, bottom: 6),
+      margin: EdgeInsets.only(right: 12.0),
       child: Align(
           alignment: Alignment.centerRight,
           child: IconButton(
             icon: Icon(
               icons[model.mainView],
               color: Colors.blueGrey[300],
-              size: 42.0,
+              size: ICON_SIZE,
               semanticLabel: labels[model.mainView],
             ),
             onPressed: () => model.toggleMainView(),
@@ -357,7 +374,9 @@ class XCuseList extends StatelessWidget {
   Widget build(BuildContext context) {
     List<Event> events = model.events;
     if (events.isEmpty) {
-      return Text("Nothing logged yet...", style: TextStyle(fontSize: 18));
+      return Text("Nothing logged yet...",
+          style: TextStyle(
+              fontSize: SMALL_HEADING_FONT_SIZE, fontStyle: FontStyle.italic));
     }
     events.sort((a, b) => b.millis.compareTo(a.millis));
 
@@ -383,7 +402,7 @@ class EventTile extends StatelessWidget {
     IconData iconData = TYPE_ICONS[event.type];
     return Icon(
       iconData,
-      size: 36.0,
+      size: ICON_SIZE,
       color: color,
     );
   }
@@ -395,6 +414,7 @@ class EventTile extends StatelessWidget {
     return ListTile(
       onTap: () => Navigator.pushNamed(context, '/details', arguments: event),
       leading: _icon(context),
+      //dense: true,
       title: Text(
         title,
         softWrap: false,
@@ -406,7 +426,8 @@ class EventTile extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text("Details", style: TextStyle(color: Colors.blueGrey[300])),
-              Icon(Icons.navigate_next, size: 24, color: Colors.blueGrey[300]),
+              Icon(Icons.navigate_next,
+                  size: SMALL_ICON_SIZE, color: Colors.blueGrey[300]),
             ],
           )),
     );
@@ -423,7 +444,8 @@ class CreateEventTile extends StatelessWidget {
       onPressed: () {
         Navigator.pushReplacementNamed(context, next);
       },
-      child: Text(label, style: TextStyle(fontSize: 24, color: color)),
+      child: Text(label,
+          style: TextStyle(fontSize: SMALL_HEADING_FONT_SIZE, color: color)),
     );
   }
 
@@ -445,19 +467,24 @@ class CreateEventTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(Icons.help, size: 36.0, color: Colors.blueGrey[300]),
-      title: Text('Nothing logged for selected day'),
+      leading: Icon(Icons.help, size: ICON_SIZE, color: Colors.blueGrey[300]),
+      title: Text('Nothing logged for selected day',
+          style: TextStyle(fontSize: PARAGRAPH_FONT_SIZE)),
       onTap: () => _showDialog(context),
-      trailing: SizedBox(
-        height: double.infinity,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text('Add', style: TextStyle(color: Colors.blueGrey[300])),
-            Icon(Icons.navigate_next, size: 24, color: Colors.blueGrey[300]),
-          ],
-        ),
+      //dense: true,
+      trailing:
+          /* SizedBox(
+      //  height: double.infinity,
+        child: */
+          Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text('Add', style: TextStyle(color: Colors.blueGrey[300])),
+          Icon(Icons.navigate_next,
+              size: SMALL_ICON_SIZE, color: Colors.blueGrey[300]),
+        ],
       ),
+      //  ),
     );
   }
 }
@@ -497,7 +524,13 @@ class XCuseCalendar extends StatelessWidget {
       calendarStyle: CalendarStyle(
         selectedColor: Colors.blue[800],
         todayColor: Colors.blue[200],
+        weekendStyle: TextStyle(color: Colors.black),
+        outsideWeekendStyle: TextStyle(color: Colors.grey[500]),
+        contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
+        cellMargin: EdgeInsets.all(3.0),
       ),
+      daysOfWeekStyle:
+          DaysOfWeekStyle(weekendStyle: TextStyle(color: Colors.grey[700])),
       onDaySelected: _onDaySelected,
       availableCalendarFormats: const {
         CalendarFormat.month: '',
@@ -507,7 +540,7 @@ class XCuseCalendar extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.amber[100],
         ),
-        headerMargin: EdgeInsets.only(bottom: 24.0),
+        headerMargin: EdgeInsets.only(bottom: 12.0),
         headerPadding: EdgeInsets.symmetric(vertical: 0.0),
       ),
       builders:
@@ -539,14 +572,15 @@ class XCuseCalendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Expanded(
+        child: Column(
       children: <Widget>[
-        _calendar(context),
+        Expanded(child: SingleChildScrollView(child: _calendar(context))),
         const Divider(),
         _eventForSelectedDay(context),
         const Divider()
       ],
-    );
+    ));
   }
 }
 
@@ -563,7 +597,7 @@ class EditPageContainer extends StatelessWidget {
 
   Widget _deleteButton(BuildContext context, Event e) {
     return IconButton(
-      icon: Icon(Icons.delete, color: Colors.blue[800], size: 36),
+      icon: Icon(Icons.delete, color: Colors.blue[800], size: ICON_SIZE),
       onPressed: () => _showDeleteDialog(context, e),
     );
   }
@@ -711,19 +745,19 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
   }
 
   bool _dateIsUnique(DateTime selectedDT) {
-    if (this.event != null && _isSameDay(selectedDT, this.event.datetime)) {
+    if (this.event != null && isSameDay(selectedDT, this.event.datetime)) {
       // we must be editing an event. It's okay to have an event with the same day as itself
       return true;
     }
     return !this.events.any((event) {
-      return _isSameDay(event.datetime, selectedDT);
+      return isSameDay(event.datetime, selectedDT);
     });
   }
 
   Future _showNonUniqueDateDialog(
       BuildContext context, DateTime selectedDT) async {
     Event e =
-        this.events.firstWhere((ev) => _isSameDay(ev.datetime, selectedDT));
+        this.events.firstWhere((ev) => isSameDay(ev.datetime, selectedDT));
     await showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -753,7 +787,8 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
       Expanded(
           flex: 3,
           child: ElevatedButton(
-              child: Text("Cancel", style: TextStyle(fontSize: 18)),
+              child: Text("Cancel",
+                  style: TextStyle(fontSize: SMALL_HEADING_FONT_SIZE)),
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all<Color>(Colors.white),
                 foregroundColor:
@@ -770,7 +805,8 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
       Expanded(
           flex: 3,
           child: ElevatedButton(
-              child: Text("Save ${type}", style: TextStyle(fontSize: 18)),
+              child: Text("Save ${type}",
+                  style: TextStyle(fontSize: SMALL_HEADING_FONT_SIZE)),
               style: ButtonStyle(
                 backgroundColor:
                     MaterialStateProperty.all<Color>(TYPE_COLORS[eventType]),
@@ -817,7 +853,7 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
                 padding: EdgeInsets.only(left: 12, right: 12),
                 child: Text(
                   "${date}",
-                  style: TextStyle(fontSize: 18),
+                  style: TextStyle(fontSize: SMALL_HEADING_FONT_SIZE),
                 )),
             Ink(
                 decoration: BoxDecoration(color: Colors.grey[300]),
@@ -857,10 +893,4 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
               _buttons(context),
             ])));
   }
-}
-
-bool _isSameDay(DateTime dayA, DateTime dayB) {
-  return dayA.year == dayB.year &&
-      dayA.month == dayB.month &&
-      dayA.day == dayB.day;
 }

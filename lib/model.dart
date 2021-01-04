@@ -30,6 +30,9 @@ class Model extends ChangeNotifier {
           .add(Event(type, row[DatabaseHelper.columnDescription], millis));
     });
     _events = new_events;
+    eventForSelectedDay = _events.firstWhere(
+        (ev) => isSameDay(ev.datetime, selectedDay),
+        orElse: () => null);
     print("loaded data");
     loadedData = true;
     notifyListeners();
@@ -128,4 +131,10 @@ class Event {
   String toString() {
     return "Event(type=${type}, desc=${description})";
   }
+}
+
+bool isSameDay(DateTime dayA, DateTime dayB) {
+  return dayA.year == dayB.year &&
+      dayA.month == dayB.month &&
+      dayA.day == dayB.day;
 }
