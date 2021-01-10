@@ -33,12 +33,19 @@ dependencies:
   cupertino_icons: ^1.0.0
   table_calendar: ^2.3.3
   url_launcher: ^5.7.10
+  flutter_launcher_icons: "^0.8.0"
   sqflite:
   path:
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+
+flutter_icons: 
+    android: "launcher_icon"
+    ios: true
+    image_path: "assets/icons/icon.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

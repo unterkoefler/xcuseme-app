@@ -85,15 +85,15 @@ class XCuseMeScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-            title: Text('XCuseMe',
-                style: TextStyle(color: Colors.deepPurple[500])),
+            title: Text('XCuseMe', style: TextStyle(color: Colors.white)),
             centerTitle: true,
             actions: actions,
             flexibleSpace: Container(
                 decoration: BoxDecoration(
-              gradient: LinearGradient(
+              /*gradient: LinearGradient(
                 colors: [Colors.teal[200], Colors.red[200]],
-              ),
+              ),*/
+              color: Colors.indigo[100],
             ))),
         body: this.body);
   }
@@ -241,14 +241,17 @@ XCuseMe is currently in active development. To report a bug or request a feature
 Thank you and have a good day!
     """;
     return SizedBox.expand(
-        child: Container(
+        child: SingleChildScrollView(
+            child: Container(
       padding: EdgeInsets.all(24),
       decoration: BoxDecoration(color: Colors.grey[200]),
       child: RichText(
           text: TextSpan(
         text: info_pre,
         style: TextStyle(
-            color: Colors.black, fontSize: PARAGRAPH_FONT_SIZE, height: 1.5),
+            color: Colors.black,
+            fontSize: PARAGRAPH_FONT_SIZE + 2,
+            height: 1.5),
         children: <TextSpan>[
           TextSpan(
             text: 'the Github repository',
@@ -262,7 +265,7 @@ Thank you and have a good day!
           TextSpan(text: info_post),
         ],
       )),
-    ));
+    )));
   }
 }
 
@@ -538,8 +541,10 @@ class XCuseCalendar extends StatelessWidget {
       headerStyle: HeaderStyle(
         centerHeaderTitle: true,
         decoration: BoxDecoration(
-          color: Colors.amber[100],
+          color: Colors.indigo[100],
         ),
+        titleTextStyle:
+            TextStyle(color: Colors.white, fontSize: SMALL_HEADING_FONT_SIZE),
         headerMargin: EdgeInsets.only(bottom: 12.0),
         headerPadding: EdgeInsets.symmetric(vertical: 0.0),
       ),
@@ -796,7 +801,7 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
                 side: MaterialStateProperty.all<BorderSide>(
                     BorderSide(width: 1, color: Colors.red[500])),
                 padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                    EdgeInsets.all(16)),
+                    EdgeInsets.all(12)),
               ),
               onPressed: () {
                 Navigator.pop(context);
@@ -812,9 +817,9 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
                     MaterialStateProperty.all<Color>(TYPE_COLORS[eventType]),
                 foregroundColor: MaterialStateProperty.all<Color>(Colors.black),
                 side: MaterialStateProperty.all<BorderSide>(
-                    BorderSide(width: 1, color: Colors.black)),
+                    BorderSide(width: 1, color: Colors.grey[600])),
                 padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                    EdgeInsets.all(16)),
+                    EdgeInsets.all(12)),
               ),
               onPressed: () {
                 if (_dateIsUnique(selectedDay)) {
@@ -890,6 +895,7 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
             child: Column(children: <Widget>[
               _topRow(context),
               _textField(context),
+              SizedBox(height: 4.0),
               _buttons(context),
             ])));
   }
