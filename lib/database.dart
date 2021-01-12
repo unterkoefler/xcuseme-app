@@ -1,10 +1,6 @@
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:provider/provider.dart';
 
 class DatabaseHelper {
   static final _databaseName = 'xcuseme.db';
@@ -57,7 +53,7 @@ class DatabaseHelper {
     await db.update(
       table,
       newRow,
-      where: "${columnMillis} = ?",
+      where: "$columnMillis = ?",
       whereArgs: [millis],
     );
   }
@@ -66,7 +62,7 @@ class DatabaseHelper {
     Database db = await instance.database;
     await db.delete(
       table,
-      where: "${columnMillis} = ?",
+      where: "$columnMillis = ?",
       whereArgs: [millis],
     );
   }

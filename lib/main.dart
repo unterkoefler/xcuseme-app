@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
@@ -9,13 +8,13 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 
-double ICON_SIZE = 30.0;
-double SMALL_ICON_SIZE = 18.0;
-double PARAGRAPH_FONT_SIZE = 14.0;
-double HEADING_FONT_SIZE = 28.0;
-double SMALL_HEADING_FONT_SIZE = 18.0;
-double LOADING_TITLE_FONT_SIZE = 36.0;
-double TITLE_FONT_SIZE = 28.0;
+const ICON_SIZE = 30.0;
+const SMALL_ICON_SIZE = 18.0;
+const PARAGRAPH_FONT_SIZE = 14.0;
+const HEADING_FONT_SIZE = 28.0;
+const SMALL_HEADING_FONT_SIZE = 18.0;
+const LOADING_TITLE_FONT_SIZE = 36.0;
+const TITLE_FONT_SIZE = 28.0;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,12 +73,11 @@ class XCuseMeApp extends StatelessWidget {
 }
 
 class XCuseMeScaffold extends StatelessWidget {
-  Widget body;
-  List<Widget> actions;
+  final Widget body;
+  final List<Widget> actions;
 
-  XCuseMeScaffold(this.body, {List<Widget> actions = const []}) {
-    this.actions = actions;
-  }
+  XCuseMeScaffold(this.body, {List<Widget> actions = const []})
+      : actions = actions;
 
   @override
   Widget build(BuildContext context) {
@@ -90,32 +88,29 @@ class XCuseMeScaffold extends StatelessWidget {
             actions: actions,
             flexibleSpace: Container(
                 decoration: BoxDecoration(
-              /*gradient: LinearGradient(
-                colors: [Colors.teal[200], Colors.red[200]],
-              ),*/
               color: Colors.indigo[100],
             ))),
         body: this.body);
   }
 }
 
-final Map<EventType, String> PATHS = {
+const Map<EventType, String> PATHS = {
   EventType.EXCUSE: '/log-excuse',
   EventType.EXERCISE: '/log-exercise'
 };
-final Map<EventType, String> BUTTON_LABELS = {
+const Map<EventType, String> BUTTON_LABELS = {
   EventType.EXCUSE: 'Log Excuse',
   EventType.EXERCISE: 'Log Exercise'
 };
-final Map<EventType, Color> TYPE_COLORS = {
-  EventType.EXCUSE: Colors.red[200],
-  EventType.EXERCISE: Colors.teal[200]
+const Map<EventType, Color> TYPE_COLORS = {
+  EventType.EXCUSE: Color(0xffef9a9a), // Colors.red[200]
+  EventType.EXERCISE: Color(0xff80cbc4) // Colors.teal[200]
 };
-final Map<EventType, IconData> TYPE_ICONS = {
+const Map<EventType, IconData> TYPE_ICONS = {
   EventType.EXCUSE: Icons.hotel,
   EventType.EXERCISE: Icons.directions_run,
 };
-final Map<EventType, String> STRINGS = {
+const Map<EventType, String> STRINGS = {
   EventType.EXCUSE: 'Excuse',
   EventType.EXERCISE: 'Exercise',
 };
@@ -413,7 +408,7 @@ class EventTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String date = DateFormat.Md().format(event.datetime);
-    String title = "${date} - ${event.description}";
+    String title = "$date - ${event.description}";
     return ListTile(
       onTap: () => Navigator.pushNamed(context, '/details', arguments: event),
       leading: _icon(context),
@@ -493,16 +488,16 @@ class CreateEventTile extends StatelessWidget {
 }
 
 class XCuseCalendar extends StatelessWidget {
-  final Map<DateTime, List<Event>> _events_for_cal = Map();
-  CalendarController _calendarController;
-  Model model;
+  final Model model;
 
-  XCuseCalendar(model) {
-    this.model = model;
-    this._calendarController = model.calendarController;
+  XCuseCalendar(this.model);
+
+  Map<DateTime, List<Event>> _eventsForCal() {
+    Map<DateTime, List<Event>> evs = Map();
     model.events.forEach((event) {
-      _events_for_cal[event.datetime] = [event];
+      evs[event.datetime] = [event];
     });
+    return evs;
   }
 
   Widget _buildEventMarker(DateTime dt, Event event) {
@@ -520,10 +515,10 @@ class XCuseCalendar extends StatelessWidget {
 
   Widget _calendar(BuildContext context) {
     return TableCalendar(
-      calendarController: _calendarController,
+      calendarController: model.calendarController,
       initialSelectedDay: model.selectedDay ?? DateTime.now(),
       endDay: DateTime.now(),
-      events: _events_for_cal,
+      events: _eventsForCal(),
       calendarStyle: CalendarStyle(
         selectedColor: Colors.blue[800],
         todayColor: Colors.blue[200],
@@ -551,8 +546,8 @@ class XCuseCalendar extends StatelessWidget {
       builders:
           CalendarBuilders(markersBuilder: (context, date, events, holidays) {
         if (events.isNotEmpty &&
-            !_calendarController.isSelected(date) &&
-            !_calendarController.isToday(date)) {
+            !model.calendarController.isSelected(date) &&
+            !model.calendarController.isToday(date)) {
           return <Widget>[_buildEventMarker(date, events[0])];
         } else {
           return <Widget>[];
@@ -687,8 +682,8 @@ class CreateOrEditPage extends StatefulWidget {
     this.events,
     this.selectedDay,
     this.onSave,
-    this.event = null,
-    this.rightButton = null,
+    this.event,
+    this.rightButton,
   });
 
   @override
@@ -716,8 +711,8 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
     this.events,
     this.selectedDay,
     this.onSave,
-    this.event = null,
-    this.rightButton = null,
+    this.event,
+    this.rightButton,
   });
 
   void initState() {
@@ -770,7 +765,7 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
           return AlertDialog(
             title: Text("Invalid Date Selected"),
             content: Text(
-                'There is already an event logged for ${date}. Would you like to go edit that one instead?'),
+                'There is already an event logged for $date. Would you like to go edit that one instead?'),
             actions: <Widget>[
               TextButton(
                   child: Text('No'),
@@ -810,7 +805,7 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
       Expanded(
           flex: 3,
           child: ElevatedButton(
-              child: Text("Save ${type}",
+              child: Text("Save $type",
                   style: TextStyle(fontSize: SMALL_HEADING_FONT_SIZE)),
               style: ButtonStyle(
                 backgroundColor:
@@ -857,7 +852,7 @@ class _CreateOrEditPageState extends State<CreateOrEditPage> {
             Container(
                 padding: EdgeInsets.only(left: 12, right: 12),
                 child: Text(
-                  "${date}",
+                  "$date",
                   style: TextStyle(fontSize: SMALL_HEADING_FONT_SIZE),
                 )),
             Ink(

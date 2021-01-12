@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:xcuseme/database.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -11,7 +10,7 @@ class Model extends ChangeNotifier {
   bool loadedData = false;
   MainView mainView = MainView.CALENDAR;
   DateTime selectedDay = DateTime.now();
-  Event eventForSelectedDay = null;
+  Event eventForSelectedDay;
 
   Model(this._events) {
     fetchAndSetData();
@@ -19,21 +18,18 @@ class Model extends ChangeNotifier {
 
   Future<void> fetchAndSetData() async {
     List<Map<String, dynamic>> rows = await dbHelper.queryAllRows();
-    List<Event> new_events = [];
+    List<Event> newEvents = [];
     rows.forEach((row) {
       int millis = row[DatabaseHelper.columnMillis];
-      DateTime dt = DateTime.fromMillisecondsSinceEpoch(millis);
       EventType type = row[DatabaseHelper.columnType] == 'EXCUSE'
           ? EventType.EXCUSE
           : EventType.EXERCISE;
-      new_events
-          .add(Event(type, row[DatabaseHelper.columnDescription], millis));
+      newEvents.add(Event(type, row[DatabaseHelper.columnDescription], millis));
     });
-    _events = new_events;
+    _events = newEvents;
     eventForSelectedDay = _events.firstWhere(
         (ev) => isSameDay(ev.datetime, selectedDay),
         orElse: () => null);
-    print("loaded data");
     loadedData = true;
     notifyListeners();
   }
@@ -42,10 +38,10 @@ class Model extends ChangeNotifier {
 
   void addEvent(DateTime when, String description, EventType type) async {
     int millis = when.millisecondsSinceEpoch;
-    String type_str = TYPE_STRINGS[type];
+    String typeStr = TYPE_STRINGS[type];
     Map<String, dynamic> row = {
       DatabaseHelper.columnMillis: millis,
-      DatabaseHelper.columnType: type_str,
+      DatabaseHelper.columnType: typeStr,
       DatabaseHelper.columnDescription: description,
     };
     await dbHelper.insert(row);
@@ -65,10 +61,10 @@ class Model extends ChangeNotifier {
     }
     int oldMillis = oldEvent.millis;
     int newMillis = newDate.millisecondsSinceEpoch;
-    String type_str = TYPE_STRINGS[oldEvent.type];
+    String typeStr = TYPE_STRINGS[oldEvent.type];
     Map<String, dynamic> newRow = {
       DatabaseHelper.columnMillis: newMillis,
-      DatabaseHelper.columnType: type_str,
+      DatabaseHelper.columnType: typeStr,
       DatabaseHelper.columnDescription: newDescription,
     };
     await dbHelper.update(oldMillis, newRow);
@@ -129,7 +125,7 @@ class Event {
 
   @override
   String toString() {
-    return "Event(type=${type}, desc=${description})";
+    return "Event(type=$type, desc=$description)";
   }
 }
 
