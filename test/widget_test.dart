@@ -6,12 +6,12 @@ import 'package:xcuseme/main.dart';
 import 'package:xcuseme/model.dart';
 
 void main() {
-  testWidgets('Log buttons appear', (WidgetTester tester) async {
+  testWidgets('Loading page appears', (WidgetTester tester) async {
     await tester.pumpWidget(ChangeNotifierProvider<Model>(
-      create: (context) => Model({}),
-      child: XCuseMeApp()));
+        create: (context) => Model([]), child: XCuseMeApp()));
 
-    expect(find.text('Log Excuse'), findsOneWidget);
-    expect(find.text('Log Exercise'), findsOneWidget);
+    expect(find.text('XCuseMe'), findsOneWidget);
+    expect(
+        find.text('The exercise tracking app for real people'), findsOneWidget);
   });
 }
