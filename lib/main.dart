@@ -236,31 +236,33 @@ XCuseMe is currently in active development. To report a bug or request a feature
 Thank you and have a good day!
     """;
     return SizedBox.expand(
-        child: SingleChildScrollView(
-            child: Container(
-      padding: EdgeInsets.all(24),
-      decoration: BoxDecoration(color: Colors.grey[200]),
-      child: RichText(
-          text: TextSpan(
-        text: info_pre,
-        style: TextStyle(
-            color: Colors.black,
-            fontSize: PARAGRAPH_FONT_SIZE + 2,
-            height: 1.5),
-        children: <TextSpan>[
-          TextSpan(
-            text: 'the Github repository',
-            style: TextStyle(
-                color: Colors.blue[800], decoration: TextDecoration.underline),
-            recognizer: TapGestureRecognizer()
-              ..onTap = () {
-                launch('https://github.com/unterkoefler/xcuseme');
-              },
-          ),
-          TextSpan(text: info_post),
-        ],
-      )),
-    )));
+        child: Container(
+            decoration: BoxDecoration(color: Colors.grey[200]),
+            child: SingleChildScrollView(
+                child: Container(
+              padding: EdgeInsets.all(24),
+              child: RichText(
+                  text: TextSpan(
+                text: info_pre,
+                style: TextStyle(
+                    color: Colors.black,
+                    fontSize: PARAGRAPH_FONT_SIZE + 2,
+                    height: 1.5),
+                children: <TextSpan>[
+                  TextSpan(
+                    text: 'the Github repository',
+                    style: TextStyle(
+                        color: Colors.blue[800],
+                        decoration: TextDecoration.underline),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        launch('https://github.com/unterkoefler/xcuseme');
+                      },
+                  ),
+                  TextSpan(text: info_post),
+                ],
+              )),
+            ))));
   }
 }
 

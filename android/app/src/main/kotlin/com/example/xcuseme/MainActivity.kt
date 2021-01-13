@@ -1,4 +1,4 @@
-package com.example.xcuseme
+package com.unterkoefler.xcuseme
 
 import io.flutter.embedding.android.FlutterActivity
 
