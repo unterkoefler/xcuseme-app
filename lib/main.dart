@@ -1,8 +1,11 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:xcuseme/model.dart';
+import 'package:xcuseme/authentication_service.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -18,35 +21,15 @@ const TITLE_FONT_SIZE = 28.0;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   runApp(
     ChangeNotifierProvider<Model>(
       create: (context) => Model([]),
-      child: XCuseMeApp(),
+      child: InitializationWrapper(),
     ),
   );
-}
-
-class InfoAction extends StatelessWidget {
-  final bool selected;
-
-  InfoAction({this.selected});
-
-  Widget build(BuildContext context) {
-    Color color = selected ? Colors.blue[800] : Colors.blueGrey[300];
-    return Container(
-        margin: EdgeInsets.only(right: 12.0),
-        child: IconButton(
-          icon: Icon(
-            Icons.info,
-            color: color,
-            size: ICON_SIZE,
-            semanticLabel: 'About this app',
-          ),
-          onPressed: () => selected
-              ? Navigator.pop(context)
-              : Navigator.pushNamed(context, '/info'),
-        ));
-  }
 }
 
 class XCuseMeApp extends StatelessWidget {
@@ -54,30 +37,146 @@ class XCuseMeApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'XCuseMe',
-      initialRoute: '/loading',
+      initialRoute: '/',
       routes: {
-        '/': (context) => XCuseMeScaffold(HomePageContainer(),
-            actions: [InfoAction(selected: false)]),
-        '/log-excuse': (context) =>
-            XCuseMeScaffold(CreatePageContainer(EventType.EXCUSE)),
-        '/log-exercise': (context) =>
-            XCuseMeScaffold(CreatePageContainer(EventType.EXERCISE)),
+        '/': (context) =>
+            AuthProvider(child: HomePageContainer(), currentRoute: '/'),
+        '/log-excuse': (context) => AuthProvider(
+            child: CreatePageContainer(EventType.EXCUSE),
+            currentRoute: '/log-excuse'),
+        '/log-exercise': (context) => AuthProvider(
+            child: CreatePageContainer(EventType.EXERCISE),
+            currentRoute: '/log-exercise'),
         '/info': (context) =>
-            XCuseMeScaffold(InfoPage(), actions: [InfoAction(selected: true)]),
-        '/loading': (context) => Material(child: MaybeLoadingPage()),
-        '/details': (context) => XCuseMeScaffold(DetailsPage()),
-        '/edit': (context) => XCuseMeScaffold(EditPageContainer()),
+            AuthProvider(child: InfoPage(), currentRoute: '/info'),
+        '/details': (context) =>
+            AuthProvider(child: DetailsPage(), currentRoute: '/details'),
+        '/edit': (context) =>
+            AuthProvider(child: EditPageContainer(), currentRoute: '/edit'),
       },
     );
   }
 }
 
+class InitializationWrapper extends StatelessWidget {
+  Future<FirebaseApp> _firebaseApp = Firebase.initializeApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<FirebaseApp>(
+      future: _firebaseApp,
+      builder: (BuildContext context, AsyncSnapshot<FirebaseApp> snapshot) {
+        if (snapshot.hasData) {
+          return XCuseMeApp();
+        } else if (snapshot.hasError) {
+          return Material(child: Text('uh oh'));
+        } else {
+          return MaterialApp(home: LoadingPage());
+        }
+      },
+    );
+  }
+}
+
+class LoginPage extends StatelessWidget {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        body: Column(
+      children: <Widget>[
+        TextField(
+          controller: emailController,
+          decoration: InputDecoration(
+            labelText: 'Email',
+          ),
+        ),
+        TextField(
+          controller: passwordController,
+          obscureText: true,
+          decoration: InputDecoration(
+            labelText: 'Password',
+          ),
+        ),
+        RaisedButton(
+          onPressed: () async {
+            String msg = await context.read<AuthenticationService>().login(
+                  email: emailController.text.trim(),
+                  password: passwordController.text.trim(),
+                );
+            print(msg);
+          },
+          child: Text('Login'),
+        ),
+      ],
+    ));
+  }
+}
+
+class AuthProvider extends StatelessWidget {
+  final Widget child;
+  final String currentRoute;
+
+  AuthProvider({this.child, this.currentRoute});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        Provider<AuthenticationService>(
+          create: (_) => AuthenticationService(FirebaseAuth.instance),
+        ),
+        StreamProvider(
+          create: (context) =>
+              context.read<AuthenticationService>().authStateChanges,
+        ),
+      ],
+      child: AuthWrapper(child: child, currentRoute: currentRoute),
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  final Widget child;
+  final String currentRoute;
+
+  AuthWrapper({this.child, this.currentRoute});
+
+  @override
+  Widget build(BuildContext context) {
+    final firebaseUser = context.watch<User>();
+
+    if (firebaseUser != null) {
+      return XCuseMeScaffold(body: child, currentRoute: currentRoute);
+    } else {
+      return Material(child: LoginPage());
+    }
+  }
+}
+
 class XCuseMeScaffold extends StatelessWidget {
   final Widget body;
-  final List<Widget> actions;
+  final String currentRoute;
 
-  XCuseMeScaffold(this.body, {List<Widget> actions = const []})
-      : actions = actions;
+  XCuseMeScaffold({this.body, this.currentRoute});
+
+  Widget _drawerItem(BuildContext context,
+      {IconData iconData, String title, String route}) {
+    return ListTile(
+      leading: Icon(iconData),
+      title: Text(title),
+      onTap: () {
+        Navigator.pop(context); // always pop the drawer
+        if (route == '/') {
+          Navigator.popUntil(context, (r) => r.isFirst);
+        } else if (route != currentRoute) {
+          Navigator.pushNamedAndRemoveUntil(context, route, (r) => r.isFirst);
+        }
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,12 +184,49 @@ class XCuseMeScaffold extends StatelessWidget {
         appBar: AppBar(
             title: Text('XCuseMe', style: TextStyle(color: Colors.white)),
             centerTitle: true,
-            actions: actions,
             flexibleSpace: Container(
                 decoration: BoxDecoration(
               color: Colors.indigo[100],
             ))),
-        body: this.body);
+        body: this.body,
+        drawer: Drawer(
+            child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.indigo[100],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'XcuseMe',
+                    style: TextStyle(
+                        fontSize: HEADING_FONT_SIZE, color: Colors.white),
+                  ),
+                  Text('The exercise tracking app for real people',
+                      style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontSize: PARAGRAPH_FONT_SIZE,
+                          color: Colors.black)),
+                ],
+              ),
+            ),
+            _drawerItem(context,
+                iconData: Icons.home, title: 'Home', route: '/'),
+            _drawerItem(context,
+                iconData: Icons.info, title: 'About', route: '/info'),
+            ListTile(
+              leading: Icon(Icons.exit_to_app),
+              title: Text('Logout'),
+              onTap: () {
+                context.read<AuthenticationService>().logout();
+                Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+              },
+            ),
+          ],
+        )));
   }
 }
 
@@ -115,25 +251,6 @@ const Map<EventType, String> STRINGS = {
   EventType.EXERCISE: 'Exercise',
 };
 
-class MaybeLoadingPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
-    return Consumer<Model>(builder: (context, model, child) {
-      if (model.loadedData) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Timer(Duration(seconds: 2), () {
-            Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
-          });
-        });
-      }
-      return LoadingPage();
-    });
-  }
-}
-
 class LoadingPage extends StatelessWidget {
   Widget _loadingIndicator(BuildContext context) {
     return LinearProgressIndicator(
@@ -145,31 +262,32 @@ class LoadingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.expand(
-        child: Container(
-            decoration: BoxDecoration(
-                gradient: LinearGradient(
-              colors: [Colors.teal[200], Colors.red[200]],
-            )),
-            child: Column(children: <Widget>[
-              Expanded(
-                  child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text('XCuseMe',
-                      style: TextStyle(
-                          fontSize: LOADING_TITLE_FONT_SIZE,
-                          color: Colors.deepPurple[500])),
-                  SizedBox(height: 8.0),
-                  Text('The exercise tracking app for real people',
-                      style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                          fontSize: PARAGRAPH_FONT_SIZE,
-                          color: Colors.black)),
-                ],
-              )),
-              _loadingIndicator(context)
-            ])));
+    return Scaffold(
+        body: SizedBox.expand(
+            child: Container(
+                decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                  colors: [Colors.teal[200], Colors.red[200]],
+                )),
+                child: Column(children: <Widget>[
+                  Expanded(
+                      child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text('XCuseMe',
+                          style: TextStyle(
+                              fontSize: LOADING_TITLE_FONT_SIZE,
+                              color: Colors.deepPurple[500])),
+                      SizedBox(height: 8.0),
+                      Text('The exercise tracking app for real people',
+                          style: TextStyle(
+                              fontStyle: FontStyle.italic,
+                              fontSize: PARAGRAPH_FONT_SIZE,
+                              color: Colors.black)),
+                    ],
+                  )),
+                  _loadingIndicator(context)
+                ]))));
   }
 }
 
@@ -272,6 +390,13 @@ class HomePageContainer extends StatelessWidget {
     return Consumer<Model>(builder: (context, model, child) {
       return HomePage(model);
     });
+  }
+}
+
+class AuthenticationWrapper extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container();
   }
 }
 
