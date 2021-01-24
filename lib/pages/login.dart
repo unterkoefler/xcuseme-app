@@ -1,40 +1,194 @@
 import 'package:flutter/material.dart';
 import 'package:xcuseme/authentication_service.dart';
 import 'package:provider/provider.dart';
+import 'package:xcuseme/constants/style.dart';
 
 class LoginPage extends StatelessWidget {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Column(
+      backgroundColor: Colors.indigo[100],
+      body: LoginScreen(),
+    );
+  }
+}
+
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  TextEditingController emailController;
+  TextEditingController passwordController;
+  bool _submitEnabled;
+
+  @override
+  void initState() {
+    super.initState();
+    emailController = TextEditingController();
+    passwordController = TextEditingController();
+    _submitEnabled = false;
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void _updateEnabledState(String _) {
+    if (_submitEnabled !=
+        (emailController.text.isNotEmpty &&
+            passwordController.text.isNotEmpty)) {
+      setState(() {
+        _submitEnabled = !_submitEnabled;
+      });
+    }
+  }
+
+  Widget _graphic(BuildContext context) {
+    return Column(
       children: <Widget>[
-        TextField(
-          controller: emailController,
-          decoration: InputDecoration(
-            labelText: 'Email',
-          ),
+        Ink.image(
+          image: AssetImage('assets/icons/login_icon.png'),
+          height: 128.0,
+          fit: BoxFit.contain,
         ),
-        TextField(
-          controller: passwordController,
-          obscureText: true,
-          decoration: InputDecoration(
-            labelText: 'Password',
+        Text(
+          'XCuseMe',
+          style: TextStyle(
+            fontSize: 24,
+            color: Colors.white,
           ),
-        ),
-        RaisedButton(
-          onPressed: () async {
-            String msg = await context.read<AuthenticationService>().login(
-                  email: emailController.text.trim(),
-                  password: passwordController.text.trim(),
-                );
-            print(msg);
-          },
-          child: Text('Login'),
         ),
       ],
-    ));
+    );
+  }
+
+  Widget _emailInput(BuildContext context) {
+    return Material(
+        borderRadius: BorderRadius.circular(40),
+        elevation: 10,
+        child: TextField(
+          controller: emailController,
+          onChanged: _updateEnabledState,
+          keyboardType: TextInputType.emailAddress,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            hintText: 'Email',
+            prefixIcon: Icon(Icons.email, size: 24, color: Colors.teal[200]),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(40),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ));
+  }
+
+  Widget _passwordInput(BuildContext context) {
+    return Material(
+        borderRadius: BorderRadius.circular(40),
+        elevation: 10,
+        child: TextField(
+          controller: passwordController,
+          onChanged: _updateEnabledState,
+          onSubmitted: _submitEnabled
+              ? (_) {
+                  _login(context);
+                }
+              : null,
+          keyboardType: TextInputType.visiblePassword,
+          obscureText: true,
+          decoration: InputDecoration(
+            hintText: 'Password',
+            prefixIcon: Icon(Icons.lock, size: 24, color: Colors.red[200]),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(40),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ));
+  }
+
+  Widget _loginButton(BuildContext context) {
+    Color getColor(Set<MaterialState> states) {
+      if (states.contains(MaterialState.disabled)) {
+        return Colors.grey[400];
+      }
+      return Colors.white;
+    }
+
+    return ElevatedButton(
+      style: ButtonStyle(
+        shape: MaterialStateProperty.all<OutlinedBorder>(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
+        backgroundColor: MaterialStateProperty.resolveWith(getColor),
+        foregroundColor: MaterialStateProperty.all<Color>(Colors.indigo[600]),
+        padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+            EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0)),
+      ),
+      onPressed: _submitEnabled
+          ? () {
+              _login(context);
+            }
+          : null,
+      child: Text('Login', style: TextStyle(fontSize: 18)),
+    );
+  }
+
+  Widget _forgotPasswordText(BuildContext context) {
+    return TextButton(
+      child: Text("Forgot password?"),
+      onPressed: () {
+        print("forgot password");
+      },
+    );
+  }
+
+  Widget _signupText(BuildContext context) {
+    return TextButton(
+      child: Text("New here? Sign up"),
+      onPressed: () {
+        print("signing up");
+      },
+    );
+  }
+
+  Future<void> _login(BuildContext context) async {
+    String msg = await context.read<AuthenticationService>().login(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+    print(msg);
+    if (msg.isNotEmpty) {
+      Scaffold.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+        child: SingleChildScrollView(
+            child: Container(
+                padding: EdgeInsets.all(24.0),
+                child: Column(
+                  children: <Widget>[
+                    SizedBox(height: 64.0),
+                    _graphic(context),
+                    SizedBox(height: 36),
+                    _emailInput(context),
+                    SizedBox(height: 12),
+                    _passwordInput(context),
+                    SizedBox(height: 6),
+                    _forgotPasswordText(context),
+                    SizedBox(height: 6),
+                    _loginButton(context),
+                    SizedBox(height: 24),
+                    _signupText(context),
+                  ],
+                ))));
   }
 }
