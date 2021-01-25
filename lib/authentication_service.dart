@@ -21,13 +21,23 @@ class AuthenticationService {
     }
   }
 
-  Future<String> signup({String email, String password}) async {
+  Future<String> signup(
+      {String email,
+      String password,
+      String confirmPassword,
+      bool agreedToTos}) async {
+    if (password != confirmPassword) {
+      return 'Passwords do not match';
+    }
+    if (!agreedToTos) {
+      return 'You must agree to the Terms and Conditions';
+    }
     try {
       await _firebaseAuth.createUserWithEmailAndPassword(
           email: email, password: password);
-      return 'Signed up';
+      return null;
     } on FirebaseAuthException catch (e) {
-      return e.message;
+      return _friendlyMessage(e);
     }
   }
 
@@ -50,6 +60,8 @@ class AuthenticationService {
       case "ERROR_TOO_MANY_REQUESTS":
       case "operation-not-allowed":
         return "Too many requests to log into this account.";
+      case 'weak-password':
+        return 'Password is too weak';
       case "ERROR_OPERATION_NOT_ALLOWED":
       case "operation-not-allowed":
         return "Server error, please try again later.";

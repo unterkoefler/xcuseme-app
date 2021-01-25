@@ -2,26 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:xcuseme/authentication_service.dart';
 import 'package:provider/provider.dart';
 import 'package:xcuseme/constants/style.dart';
-import 'package:xcuseme/pages/signup.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class LoginPage extends StatelessWidget {
+class SignupPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.indigo[100],
-      body: LoginScreen(),
-    );
+    return Provider<AuthenticationService>(
+        create: (_) => AuthenticationService(FirebaseAuth.instance),
+        child: Scaffold(
+          backgroundColor: Colors.teal[100],
+          body: SignupScreen(),
+        ));
   }
 }
 
-class LoginScreen extends StatefulWidget {
+class SignupScreen extends StatefulWidget {
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  _SignupScreenState createState() => _SignupScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignupScreenState extends State<SignupScreen> {
   TextEditingController emailController;
   TextEditingController passwordController;
+  TextEditingController confirmPasswordController;
+  List<TextEditingController> _controllers = [];
+  bool _agreedToTos = false;
   bool _submitEnabled;
 
   @override
@@ -29,43 +34,39 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    confirmPasswordController = TextEditingController();
+    _controllers = [
+      emailController,
+      passwordController,
+      confirmPasswordController,
+    ];
     _submitEnabled = false;
   }
 
   @override
   void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
+    _controllers.forEach((ctlr) {
+      ctlr.dispose();
+    });
     super.dispose();
   }
 
-  void _updateEnabledState(String text) {
-    if (_submitEnabled !=
-        (emailController.text.isNotEmpty &&
-            passwordController.text.isNotEmpty)) {
+  void _updateEnabledState(String _) {
+    if (_submitEnabled != _agreedToTos &&
+        _controllers.every((ctlr) => ctlr.text.isNotEmpty)) {
       setState(() {
         _submitEnabled = !_submitEnabled;
       });
     }
   }
 
-  Widget _graphic(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Ink.image(
-          image: AssetImage('assets/icons/login_icon.png'),
-          height: 128.0,
-          fit: BoxFit.contain,
-        ),
-        Text(
-          'XCuseMe',
-          style: TextStyle(
-            fontSize: 24,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    );
+  Widget _welcomeText(BuildContext context) {
+    return Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          'Create An Account',
+          style: TextStyle(color: Colors.white, fontSize: HEADING_FONT_SIZE),
+        ));
   }
 
   Widget _emailInput(BuildContext context) {
@@ -95,11 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: TextField(
           controller: passwordController,
           onChanged: _updateEnabledState,
-          onSubmitted: _submitEnabled
-              ? (_) {
-                  _login(context);
-                }
-              : null,
+          textInputAction: TextInputAction.next,
           keyboardType: TextInputType.visiblePassword,
           obscureText: true,
           decoration: InputDecoration(
@@ -113,7 +110,32 @@ class _LoginScreenState extends State<LoginScreen> {
         ));
   }
 
-  Widget _loginButton(BuildContext context) {
+  Widget _confirmPasswordInput(BuildContext context) {
+    return Material(
+        borderRadius: BorderRadius.circular(40),
+        elevation: 10,
+        child: TextField(
+          controller: confirmPasswordController,
+          onChanged: _updateEnabledState,
+          onSubmitted: _submitEnabled
+              ? (_) {
+                  _signup(context);
+                }
+              : null,
+          keyboardType: TextInputType.visiblePassword,
+          obscureText: true,
+          decoration: InputDecoration(
+            hintText: 'Confirm Password',
+            prefixIcon: Icon(Icons.lock, size: 24, color: Colors.red[200]),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(40),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ));
+  }
+
+  Widget _signupButton(BuildContext context) {
     Color getColor(Set<MaterialState> states) {
       if (states.contains(MaterialState.disabled)) {
         return Colors.grey[400];
@@ -133,42 +155,50 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       onPressed: _submitEnabled
           ? () {
-              _login(context);
+              _signup(context);
             }
           : null,
-      child: Text('Login', style: TextStyle(fontSize: 18)),
+      child: Text('Sign up', style: TextStyle(fontSize: 18)),
     );
   }
 
-  Widget _forgotPasswordText(BuildContext context) {
+  Widget _loginText(BuildContext context) {
     return TextButton(
-      child: Text("Forgot password?"),
+      child: Text("Been here before? Log in"),
       onPressed: () {
-        print('forgot password');
+        Navigator.pop(context);
       },
     );
   }
 
-  Widget _signupText(BuildContext context) {
-    return TextButton(
-      child: Text("New here? Sign up"),
-      onPressed: () {
-        Navigator.push(context,
-            PageRouteBuilder(pageBuilder: (BuildContext context, __, ____) {
-          return SignupPage();
-        }));
-      },
+  Widget _tosRow(BuildContext context) {
+    return ListTile(
+      leading: Checkbox(
+        value: _agreedToTos,
+        onChanged: (val) {
+          setState(() {
+            _agreedToTos = val;
+          });
+          _updateEnabledState('');
+        },
+      ),
+      title: Text('I have read and agree to the Terms and Conditions',
+          style: TextStyle(fontSize: PARAGRAPH_FONT_SIZE)),
     );
   }
 
-  Future<void> _login(BuildContext context) async {
-    String msg = await context.read<AuthenticationService>().login(
-          email: emailController.text.trim(),
-          password: passwordController.text.trim(),
-        );
+  Future<void> _signup(BuildContext context) async {
+    String msg = await context.read<AuthenticationService>().signup(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+        confirmPassword: confirmPasswordController.text.trim(),
+        agreedToTos: _agreedToTos);
     print(msg);
     if (msg != null) {
       Scaffold.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } else {
+      // success
+      Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
     }
   }
 
@@ -180,18 +210,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 padding: EdgeInsets.all(24.0),
                 child: Column(
                   children: <Widget>[
-                    SizedBox(height: 64.0),
-                    _graphic(context),
+                    _welcomeText(context),
                     SizedBox(height: 36),
                     _emailInput(context),
                     SizedBox(height: 12),
                     _passwordInput(context),
-                    SizedBox(height: 6),
-                    _forgotPasswordText(context),
-                    SizedBox(height: 6),
-                    _loginButton(context),
+                    SizedBox(height: 12),
+                    _confirmPasswordInput(context),
+                    SizedBox(height: 12),
+                    _tosRow(context),
+                    SizedBox(height: 12),
+                    _signupButton(context),
                     SizedBox(height: 24),
-                    _signupText(context),
+                    _loginText(context),
                   ],
                 ))));
   }

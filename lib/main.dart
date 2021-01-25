@@ -113,7 +113,7 @@ class AuthWrapper extends StatelessWidget {
     if (firebaseUser != null) {
       return XCuseMeScaffold(body: child, currentRoute: currentRoute);
     } else {
-      return Material(child: LoginPage());
+      return LoginPage();
     }
   }
 }
