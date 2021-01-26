@@ -11,6 +11,15 @@ class AuthenticationService {
     await _firebaseAuth.signOut();
   }
 
+  Future<String> sendPasswordResetEmail({String email}) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return _friendlyMessage(e);
+    }
+  }
+
   Future<String> login({String email, String password}) async {
     try {
       await _firebaseAuth.signInWithEmailAndPassword(

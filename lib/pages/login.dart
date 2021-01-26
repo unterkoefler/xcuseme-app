@@ -3,6 +3,7 @@ import 'package:xcuseme/authentication_service.dart';
 import 'package:provider/provider.dart';
 import 'package:xcuseme/constants/style.dart';
 import 'package:xcuseme/pages/signup.dart';
+import 'package:xcuseme/pages/forgot_password.dart';
 
 class LoginPage extends StatelessWidget {
   @override
@@ -144,7 +145,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextButton(
       child: Text("Forgot password?"),
       onPressed: () {
-        print('forgot password');
+        Navigator.push(context,
+            PageRouteBuilder(pageBuilder: (BuildContext context, __, ____) {
+          return ForgotPasswordPage();
+        }));
       },
     );
   }
