@@ -3,6 +3,8 @@ import 'package:xcuseme/authentication_service.dart';
 import 'package:provider/provider.dart';
 import 'package:xcuseme/constants/style.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SignupPage extends StatelessWidget {
   @override
@@ -186,8 +188,26 @@ class _SignupScreenState extends State<SignupScreen> {
           _updateEnabledState('');
         },
       ),
-      title: Text('I have read and agree to the Terms and Conditions',
-          style: TextStyle(fontSize: PARAGRAPH_FONT_SIZE)),
+      title: RichText(
+        text: TextSpan(
+          text: 'I have read and agree to the ',
+          style: TextStyle(fontSize: PARAGRAPH_FONT_SIZE),
+          children: <TextSpan>[
+            TextSpan(
+              text: 'Terms and Conditions',
+              style: TextStyle(
+                  color: Colors.blue[800],
+                  fontSize: PARAGRAPH_FONT_SIZE,
+                  decoration: TextDecoration.underline),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  launch(
+                      'https://github.com/unterkoefler/xcuseme/blob/master/TERMS_OF_SERVICE.md');
+                },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
