@@ -24,7 +24,7 @@ You retain all intellectually property rights over all content created in your a
 
 ## Privacy
 
-Your data is used and stored according to XCuseMe's [Privacy Policy](https://github.com/unterkoefler/xcuseme/blob/master/privacy.md).
+Your data is used and stored according to XCuseMe's [Privacy Policy](https://github.com/unterkoefler/xcuseme/blob/master/PRIVACY_POLICY.md).
 
 ## General Terms
 
@@ -36,4 +36,4 @@ We make no guarantees that the App will be secure or error-free, but we will try
 
 ## Last Updated 
 
-This policy was last updated on January 25, 2021.
+This policy was last updated on January 26, 2021.
