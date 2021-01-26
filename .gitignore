@@ -47,3 +47,7 @@ app.*.map.json
 
 # firebase stuff
 /android/app/google-services.json
+
+# ios
+ios/Podfile
+ios/Podfile.lock
