@@ -11,8 +11,21 @@ class ForgotPasswordPage extends StatelessWidget {
         create: (_) => AuthenticationService(FirebaseAuth.instance),
         child: Scaffold(
           backgroundColor: Colors.red[100],
+          appBar: AppBar(
+            title: _titleText(context),
+            elevation: 0,
+            flexibleSpace:
+                Container(decoration: BoxDecoration(color: Colors.red[100])),
+          ),
           body: ForgotPasswordScreen(),
         ));
+  }
+
+  Widget _titleText(BuildContext context) {
+    return Text(
+      'Forgot Password',
+      style: TextStyle(color: Colors.white, fontSize: HEADING_FONT_SIZE),
+    );
   }
 }
 
@@ -52,15 +65,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _submitEnabled = !_submitEnabled;
       });
     }
-  }
-
-  Widget _titleText(BuildContext context) {
-    return Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          'Forgot Password',
-          style: TextStyle(color: Colors.white, fontSize: HEADING_FONT_SIZE),
-        ));
   }
 
   Widget _descriptionText(BuildContext context) {
@@ -163,10 +167,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> contents = <Widget>[
-      _titleText(context),
-      SizedBox(height: 36),
-    ];
+    List<Widget> contents = <Widget>[];
 
     if (_emailSent) {
       contents.addAll(
