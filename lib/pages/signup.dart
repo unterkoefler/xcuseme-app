@@ -11,8 +11,21 @@ class SignupPage extends StatelessWidget {
         create: (_) => AuthenticationService(FirebaseAuth.instance),
         child: Scaffold(
           backgroundColor: Colors.teal[100],
+          appBar: AppBar(
+            title: _titleText(context),
+            elevation: 0,
+            flexibleSpace:
+                Container(decoration: BoxDecoration(color: Colors.teal[100])),
+          ),
           body: SignupScreen(),
         ));
+  }
+
+  Widget _titleText(BuildContext context) {
+    return Text(
+      'Create Account',
+      style: TextStyle(color: Colors.white, fontSize: HEADING_FONT_SIZE),
+    );
   }
 }
 
@@ -58,15 +71,6 @@ class _SignupScreenState extends State<SignupScreen> {
         _submitEnabled = !_submitEnabled;
       });
     }
-  }
-
-  Widget _welcomeText(BuildContext context) {
-    return Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          'Create An Account',
-          style: TextStyle(color: Colors.white, fontSize: HEADING_FONT_SIZE),
-        ));
   }
 
   Widget _emailInput(BuildContext context) {
@@ -210,8 +214,6 @@ class _SignupScreenState extends State<SignupScreen> {
                 padding: EdgeInsets.all(24.0),
                 child: Column(
                   children: <Widget>[
-                    _welcomeText(context),
-                    SizedBox(height: 36),
                     _emailInput(context),
                     SizedBox(height: 12),
                     _passwordInput(context),
