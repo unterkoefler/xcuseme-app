@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:xcuseme/database.dart';
+import 'package:xcuseme/firestore_service.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Model extends ChangeNotifier {
   List<Event> _events;
@@ -36,7 +38,8 @@ class Model extends ChangeNotifier {
 
   List<Event> get events => _events;
 
-  void addEvent(DateTime when, String description, EventType type) async {
+  void addEvent(
+      DateTime when, String description, EventType type, User user) async {
     int millis = when.millisecondsSinceEpoch;
     String typeStr = TYPE_STRINGS[type];
     Map<String, dynamic> row = {
@@ -45,6 +48,7 @@ class Model extends ChangeNotifier {
       DatabaseHelper.columnDescription: description,
     };
     await dbHelper.insert(row);
+    await FirestoreService().addEvent(user: user, event: row);
     Event event = Event(type, description, millis);
     _events.add(event);
     if (when == selectedDay) {
@@ -77,9 +81,10 @@ class Model extends ChangeNotifier {
     return oldEvent;
   }
 
-  Future<void> deleteEvent(Event event) async {
+  Future<void> deleteEvent(Event event, User user) async {
     _events.remove(event);
     await dbHelper.delete(event.millis);
+    await FirestoreService().deleteEvent(user: user, millis: event.millis);
     if (eventForSelectedDay == event) {
       eventForSelectedDay = null;
     }
