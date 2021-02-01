@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:xcuseme/firestore_service.dart';
 
 class AuthenticationService {
   final FirebaseAuth _firebaseAuth;
@@ -44,6 +45,8 @@ class AuthenticationService {
     try {
       await _firebaseAuth.createUserWithEmailAndPassword(
           email: email, password: password);
+      await FirestoreService()
+          .createUserDocument(user: _firebaseAuth.currentUser, email: email);
       return null;
     } on FirebaseAuthException catch (e) {
       return _friendlyMessage(e);

@@ -3,6 +3,7 @@ import 'package:xcuseme/model.dart';
 import 'package:xcuseme/pages/create_or_edit.dart';
 import 'package:xcuseme/constants/style.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class EditPage extends StatelessWidget {
   Future<void> _onSave(BuildContext context, DateTime selectedDay,
@@ -23,6 +24,7 @@ class EditPage extends StatelessWidget {
   }
 
   Future _showDeleteDialog(BuildContext context, Event e) async {
+    User user = context.read<User>();
     await showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -39,7 +41,7 @@ class EditPage extends StatelessWidget {
                   child: Text('Delete'),
                   onPressed: () async {
                     await Provider.of<Model>(context, listen: false)
-                        .deleteEvent(e);
+                        .deleteEvent(e, user);
                     Navigator.pushNamedAndRemoveUntil(
                         context, '/', (_) => false);
                   }),
