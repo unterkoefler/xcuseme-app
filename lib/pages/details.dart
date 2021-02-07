@@ -1,8 +1,8 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'package:xcuseme/model.dart';
 import 'package:xcuseme/constants/style.dart';
 import 'package:xcuseme/constants/constants.dart';
+import 'package:xcuseme/models/event.dart';
 
 class DetailsPage extends StatelessWidget {
   Widget _editButton(BuildContext context, Event e) {

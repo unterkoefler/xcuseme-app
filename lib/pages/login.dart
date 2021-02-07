@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:xcuseme/authentication_service.dart';
 import 'package:provider/provider.dart';
-import 'package:xcuseme/constants/style.dart';
 import 'package:xcuseme/pages/signup.dart';
 import 'package:xcuseme/pages/forgot_password.dart';
 
@@ -172,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
     print(msg);
     if (msg != null) {
-      Scaffold.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 

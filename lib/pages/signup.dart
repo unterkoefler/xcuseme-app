@@ -219,7 +219,7 @@ class _SignupScreenState extends State<SignupScreen> {
         agreedToTos: _agreedToTos);
     print(msg);
     if (msg != null) {
-      Scaffold.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } else {
       // success
       Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);

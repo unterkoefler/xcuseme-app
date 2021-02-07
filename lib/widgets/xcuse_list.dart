@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:xcuseme/constants/style.dart';
 import 'package:xcuseme/widgets/event_tile.dart';
 import 'package:xcuseme/model.dart';
+import 'package:provider/provider.dart';
+import 'package:xcuseme/models/event.dart';
 
 class XCuseList extends StatelessWidget {
   final Model model;
@@ -9,7 +11,7 @@ class XCuseList extends StatelessWidget {
   XCuseList(this.model);
 
   Widget build(BuildContext context) {
-    List<Event> events = model.events;
+    List<Event> events = context.watch<List<Event>>();
     if (events.isEmpty) {
       return Text("Nothing logged yet...",
           style: TextStyle(

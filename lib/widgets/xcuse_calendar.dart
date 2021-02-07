@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:xcuseme/constants/style.dart';
 import 'package:xcuseme/constants/constants.dart';
 import 'package:xcuseme/widgets/event_tile.dart';
+import 'package:xcuseme/models/event.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:xcuseme/widgets/create_event_tile.dart';
 import 'package:xcuseme/model.dart';
+import 'package:provider/provider.dart';
 
 class XCuseCalendar extends StatelessWidget {
   final Model model;
 
   XCuseCalendar(this.model);
 
-  Map<DateTime, List<Event>> _eventsForCal() {
+  Map<DateTime, List<Event>> _eventsForCal(List<Event> events) {
     Map<DateTime, List<Event>> evs = Map();
-    model.events.forEach((event) {
+    events.forEach((event) {
       evs[event.datetime] = [event];
     });
     return evs;
@@ -32,12 +34,12 @@ class XCuseCalendar extends StatelessWidget {
     );
   }
 
-  Widget _calendar(BuildContext context) {
+  Widget _calendar(BuildContext context, List<Event> events) {
     return TableCalendar(
       calendarController: model.calendarController,
       initialSelectedDay: model.selectedDay ?? DateTime.now(),
       endDay: DateTime.now(),
-      events: _eventsForCal(),
+      events: _eventsForCal(events),
       calendarStyle: CalendarStyle(
         selectedColor: Colors.blue[800],
         todayColor: Colors.blue[200],
@@ -75,8 +77,10 @@ class XCuseCalendar extends StatelessWidget {
     );
   }
 
-  Widget _eventForSelectedDay(BuildContext context) {
-    Event event = model.eventForSelectedDay;
+  Widget _eventForSelectedDay(List<Event> events) {
+    Event event = events.firstWhere(
+        (ev) => isSameDay(ev.datetime, model.selectedDay),
+        orElse: () => null);
     if (event == null) {
       return CreateEventTile();
     } else {
@@ -85,18 +89,19 @@ class XCuseCalendar extends StatelessWidget {
   }
 
   void _onDaySelected(DateTime day, List events, List holidays) {
-    Event event = events.isEmpty ? null : events[0];
-    model.updateSelectedDay(day, event);
+    model.updateSelectedDay(day);
   }
 
   @override
   Widget build(BuildContext context) {
+    List<Event> events = context.watch<List<Event>>();
     return Expanded(
         child: Column(
       children: <Widget>[
-        Expanded(child: SingleChildScrollView(child: _calendar(context))),
+        Expanded(
+            child: SingleChildScrollView(child: _calendar(context, events))),
         const Divider(),
-        _eventForSelectedDay(context),
+        _eventForSelectedDay(events),
         const Divider()
       ],
     ));
