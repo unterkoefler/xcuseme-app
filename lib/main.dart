@@ -6,6 +6,7 @@ import 'package:xcuseme/model.dart';
 import 'package:xcuseme/pages/create.dart';
 import 'package:xcuseme/pages/edit.dart';
 import 'package:xcuseme/pages/details.dart';
+import 'package:xcuseme/pages/stats.dart';
 import 'package:xcuseme/pages/info.dart';
 import 'package:xcuseme/pages/loading.dart';
 import 'package:xcuseme/pages/login.dart';
@@ -49,6 +50,8 @@ class XCuseMeApp extends StatelessWidget {
             currentRoute: '/log-exercise'),
         '/info': (context) =>
             AuthProvider(child: InfoPage(), currentRoute: '/info'),
+        '/stats': (context) =>
+            AuthProvider(child: StatsPage(), currentRoute: '/stats'),
         '/details': (context) =>
             AuthProvider(child: DetailsPage(), currentRoute: '/details'),
         '/edit': (context) =>
