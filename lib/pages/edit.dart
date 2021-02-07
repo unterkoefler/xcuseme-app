@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:xcuseme/model.dart';
+import 'package:xcuseme/firestore_service.dart';
 import 'package:xcuseme/pages/create_or_edit.dart';
 import 'package:xcuseme/constants/style.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:xcuseme/models/event.dart';
 
 class EditPage extends StatelessWidget {
   Future<void> _onSave(BuildContext context, DateTime selectedDay,
       String description, EventType eventType, Event event) async {
-    Event newEvent = await Provider.of<Model>(context, listen: false)
-        .updateEvent(event, selectedDay, description);
+    Event newEvent = await FirestoreService().updateEvent(
+      user: context.read<User>(),
+      oldEvent: event,
+      newDate: selectedDay,
+      newDescription: description,
+    );
 
     Navigator.pushNamedAndRemoveUntil(
         context, '/details', (route) => route.isFirst,
@@ -40,8 +46,7 @@ class EditPage extends StatelessWidget {
               TextButton(
                   child: Text('Delete'),
                   onPressed: () async {
-                    await Provider.of<Model>(context, listen: false)
-                        .deleteEvent(e, user);
+                    await FirestoreService().deleteEvent(user: user, event: e);
                     Navigator.pushNamedAndRemoveUntil(
                         context, '/', (_) => false);
                   }),
@@ -53,11 +58,12 @@ class EditPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Event event = ModalRoute.of(context).settings.arguments;
+    List<Event> events = context.watch<List<Event>>();
     return Consumer<Model>(builder: (context, model, child) {
       return CreateOrEditPage(
         eventType: event.type,
         selectedDay: event.datetime,
-        events: model.events,
+        events: events,
         onSave: _onSave,
         event: event,
         rightButton: _deleteButton(context, event),

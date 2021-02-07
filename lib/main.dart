@@ -11,7 +11,9 @@ import 'package:xcuseme/pages/loading.dart';
 import 'package:xcuseme/pages/login.dart';
 import 'package:xcuseme/pages/home.dart';
 import 'package:xcuseme/widgets/drawer.dart';
+import 'package:xcuseme/models/event.dart';
 import 'package:xcuseme/authentication_service.dart';
+import 'package:xcuseme/firestore_service.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 
@@ -22,7 +24,7 @@ void main() async {
   ]);
   runApp(
     ChangeNotifierProvider<Model>(
-      create: (context) => Model([]),
+      create: (context) => Model(),
       child: InitializationWrapper(),
     ),
   );
@@ -100,6 +102,21 @@ class AuthProvider extends StatelessWidget {
   }
 }
 
+class EventStreamProvider extends StatelessWidget {
+  final Widget child;
+
+  EventStreamProvider(this.child);
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamProvider<List<Event>>(
+        create: (context) =>
+            FirestoreService().eventStream(user: context.read<User>()),
+        initialData: [],
+        child: child);
+  }
+}
+
 class AuthWrapper extends StatelessWidget {
   final Widget child;
   final String currentRoute;
@@ -134,7 +151,7 @@ class XCuseMeScaffold extends StatelessWidget {
                 decoration: BoxDecoration(
               color: Colors.indigo[100],
             ))),
-        body: this.body,
+        body: EventStreamProvider(this.body),
         drawer: XCuseMeDrawer(currentRoute: currentRoute));
   }
 }

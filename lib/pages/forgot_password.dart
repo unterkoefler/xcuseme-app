@@ -156,7 +156,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         .sendPasswordResetEmail(email: emailController.text.trim());
     print(msg);
     if (msg != null) {
-      Scaffold.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } else {
       // success
       setState(() {

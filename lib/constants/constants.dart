@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:xcuseme/model.dart';
+import 'package:xcuseme/models/event.dart';
 
 const Map<EventType, String> PATHS = {
   EventType.EXCUSE: '/log-excuse',

@@ -4,14 +4,17 @@ import 'package:xcuseme/constants/constants.dart';
 import 'package:xcuseme/widgets/xcuse_list.dart';
 import 'package:xcuseme/widgets/xcuse_calendar.dart';
 import 'package:xcuseme/model.dart';
+import 'package:xcuseme/models/event.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
   final Model model;
 
   HomePage(this.model);
 
-  bool _shouldDisableLogButtons() {
-    return this.model.events.any((event) {
+  bool _shouldDisableLogButtons(BuildContext context) {
+    List<Event> events = context.watch<List<Event>>();
+    return events.any((event) {
       return isSameDay(event.datetime, model.selectedDay);
     });
   }
@@ -38,7 +41,7 @@ class HomePage extends StatelessWidget {
                 foregroundColor: MaterialStateProperty.all(Colors.white)),
             child: Text(label,
                 style: TextStyle(fontSize: SMALL_HEADING_FONT_SIZE)),
-            onPressed: _shouldDisableLogButtons()
+            onPressed: _shouldDisableLogButtons(context)
                 ? null
                 : () {
                     Navigator.pushNamed(

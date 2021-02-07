@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:xcuseme/constants/style.dart';
 import 'package:xcuseme/constants/constants.dart';
-import 'package:xcuseme/model.dart';
+import 'package:xcuseme/models/event.dart';
 
 class CreateEventTile extends StatelessWidget {
   Widget _dialogOption(BuildContext context, EventType type) {
