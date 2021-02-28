@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:xcuseme/models/event.dart';
+import 'package:xcuseme/models/settings.dart';
 import 'package:xcuseme/database.dart';
 
 class FirestoreService {
@@ -20,6 +21,16 @@ class FirestoreService {
     rows.forEach((row) {
       _eventsRef(user).add(row);
     });
+  }
+
+  Stream<UserSettings> settingsStream({User user}) {
+    return _db.collection('users').doc(user.uid).snapshots().map((snapshot) {
+      return UserSettings.fromMap(snapshot.data());
+    });
+  }
+
+  Future<void> updateSettings({User user, UserSettings settings}) {
+    _db.collection('users').doc(user.uid).update(settings.toMap());
   }
 
   Stream<List<Event>> eventStream({User user}) {

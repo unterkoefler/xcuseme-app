@@ -10,6 +10,7 @@ import 'package:xcuseme/pages/info.dart';
 import 'package:xcuseme/pages/loading.dart';
 import 'package:xcuseme/pages/login.dart';
 import 'package:xcuseme/pages/home.dart';
+import 'package:xcuseme/pages/settings.dart';
 import 'package:xcuseme/widgets/drawer.dart';
 import 'package:xcuseme/models/event.dart';
 import 'package:xcuseme/authentication_service.dart';
@@ -53,6 +54,8 @@ class XCuseMeApp extends StatelessWidget {
             AuthProvider(child: DetailsPage(), currentRoute: '/details'),
         '/edit': (context) =>
             AuthProvider(child: EditPage(), currentRoute: '/edit'),
+        '/settings': (context) => AuthProvider(
+            child: SettingsStreamProvider(), currentRoute: '/settings'),
       },
     );
   }

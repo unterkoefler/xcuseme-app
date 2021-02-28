@@ -56,6 +56,8 @@ class XCuseMeDrawer extends StatelessWidget {
         _drawerItem(context, iconData: Icons.home, title: 'Home', route: '/'),
         _drawerItem(context,
             iconData: Icons.info, title: 'About', route: '/info'),
+        _drawerItem(context,
+            iconData: Icons.settings, title: 'Settings', route: '/settings'),
         ListTile(
           leading: Icon(Icons.exit_to_app),
           title: Text('Logout'),
