@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:xcuseme/model.dart';
+import 'package:xcuseme/notifications.dart';
 import 'package:xcuseme/pages/create.dart';
 import 'package:xcuseme/pages/edit.dart';
 import 'package:xcuseme/pages/details.dart';
@@ -23,6 +24,7 @@ void main() async {
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
+  createNotificationChannel();
   runApp(
     ChangeNotifierProvider<Model>(
       create: (context) => Model(),
