@@ -24,12 +24,15 @@ dependencies:
   flutter:
     sdk: flutter
 
-  firebase_core: ^0.7.0
-  firebase_auth: ^0.20.0+1
-  cloud_firestore: ^0.16.0
+  firebase_core: ^1.0.0
+  firebase_auth: ^1.0.0
+  cloud_firestore: ^1.0.0
+  firebase_messaging: ^9.0.0
+
+  flutter_local_notifications: ^5.0.0-nullsafety.1
 
   provider: ^5.0.0-nullsafety
-  intl: ^0.16.0
+  intl: ^0.17.0
 
   table_calendar: ^2.3.3
   url_launcher: ^6.0.0-nullsafety
