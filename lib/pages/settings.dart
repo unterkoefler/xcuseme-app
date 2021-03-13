@@ -7,6 +7,7 @@ import 'package:xcuseme/models/settings.dart';
 import 'package:xcuseme/firestore_service.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:time_picker_widget/time_picker_widget.dart';
 
 class SettingsStreamProvider extends StatelessWidget {
   @override
@@ -31,8 +32,12 @@ class SettingsPage extends StatelessWidget {
   _onChangeReminderTime(
       BuildContext context, UserSettings currentSettings) async {
     TimeOfDay initialTime = currentSettings.reminderTime;
-    TimeOfDay newTime =
-        await showTimePicker(context: context, initialTime: initialTime);
+    TimeOfDay newTime = await showCustomTimePicker(
+      context: context,
+      initialTime: initialTime,
+      onFailValidation: (_) {},
+      selectableTimePredicate: (time) => time.minute % 30 == 0,
+    );
     if (newTime == null) {
       return;
     }

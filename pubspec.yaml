@@ -34,6 +34,7 @@ dependencies:
   provider: ^5.0.0-nullsafety
   intl: ^0.17.0
 
+  time_picker_widget: ^1.0.0+9
   table_calendar: ^2.3.3
   url_launcher: ^6.0.0-nullsafety
   sqflite: ^2.0.0-nullsafety
