@@ -25,12 +25,15 @@ class FirestoreService {
 
   Stream<UserSettings> settingsStream({User user}) {
     return _db.collection('users').doc(user.uid).snapshots().map((snapshot) {
-      return UserSettings.fromMap(snapshot.data());
+      return UserSettings.fromMapAndLocalize(snapshot.data());
     });
   }
 
   Future<void> updateSettings({User user, UserSettings settings}) {
-    _db.collection('users').doc(user.uid).update(settings.toMap());
+    _db
+        .collection('users')
+        .doc(user.uid)
+        .update(settings.toMapAndStandardize());
   }
 
   Stream<List<Event>> eventStream({User user}) {
