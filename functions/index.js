@@ -28,9 +28,22 @@ async function sendReminders(context) {
     return;
   }
 
+  let tokens = [];
   snapshot.forEach((doc) => {
-    console.log(doc.id);
+    const userTokens = doc.data().tokens;
+    console.log({userTokens});
+    tokens = tokens.concat(userTokens);
   });
+
+  const message = {
+    tokens,
+    notification: {
+      title: "Your Daily XCuseMe Reminder",
+      body: "What's going on today?",
+    },
+  };
+  const response = await admin.messaging().sendMulticast(message);
+  console.log(response.successCount + " messages sent successfully");
 }
 
 function roundToHalfHour(minutes) {
