@@ -7,6 +7,7 @@ import 'package:xcuseme/models/settings.dart';
 import 'package:xcuseme/firestore_service.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:time_picker_widget/time_picker_widget.dart';
 
 class SettingsStreamProvider extends StatelessWidget {
@@ -23,7 +24,13 @@ class SettingsStreamProvider extends StatelessWidget {
 
 class SettingsPage extends StatelessWidget {
   _onToggleReminder(
-      BuildContext context, UserSettings currentSettings, bool val) {
+      BuildContext context, UserSettings currentSettings, bool val) async {
+    NotificationSettings notificationSettings =
+        await FirebaseMessaging.instance.requestPermission();
+    if (notificationSettings.authorizationStatus !=
+        AuthorizationStatus.authorized) {
+      return;
+    }
     UserSettings newSettings = UserSettings(val, currentSettings.reminderTime);
     FirestoreService()
         .updateSettings(user: context.read<User>(), settings: newSettings);
