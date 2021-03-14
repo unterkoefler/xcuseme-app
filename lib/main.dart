@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:xcuseme/model.dart';
@@ -63,8 +64,17 @@ class XCuseMeApp extends StatelessWidget {
   }
 }
 
+Future<FirebaseApp> initializeFirebase() async {
+  FirebaseApp _firebaseApp = await Firebase.initializeApp();
+  String token = await FirebaseMessaging.instance.getToken();
+  await FirestoreService().updateTokens(token);
+  FirebaseMessaging.instance.onTokenRefresh
+      .listen((token) => FirestoreService().updateTokens(token));
+  return _firebaseApp;
+}
+
 class InitializationWrapper extends StatelessWidget {
-  final Future<FirebaseApp> _firebaseApp = Firebase.initializeApp();
+  final Future<FirebaseApp> _firebaseApp = initializeFirebase();
 
   @override
   Widget build(BuildContext context) {
