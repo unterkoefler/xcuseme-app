@@ -23,6 +23,16 @@ class FirestoreService {
     });
   }
 
+  Future<void> updateTokens(String token) async {
+    String userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      return null;
+    }
+    await _db.collection('users').doc(userId).update({
+      'tokens': FieldValue.arrayUnion([token]),
+    });
+  }
+
   Stream<UserSettings> settingsStream({User user}) {
     return _db.collection('users').doc(user.uid).snapshots().map((snapshot) {
       return UserSettings.fromMapAndLocalize(snapshot.data());

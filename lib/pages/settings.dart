@@ -1,4 +1,3 @@
-import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:xcuseme/constants/style.dart';
 import 'package:xcuseme/constants/constants.dart';
@@ -25,11 +24,15 @@ class SettingsStreamProvider extends StatelessWidget {
 class SettingsPage extends StatelessWidget {
   _onToggleReminder(
       BuildContext context, UserSettings currentSettings, bool val) async {
-    NotificationSettings notificationSettings =
-        await FirebaseMessaging.instance.requestPermission();
-    if (notificationSettings.authorizationStatus !=
-        AuthorizationStatus.authorized) {
-      return;
+    if (val) {
+      NotificationSettings notificationSettings =
+          await FirebaseMessaging.instance.requestPermission();
+      if (notificationSettings.authorizationStatus !=
+          AuthorizationStatus.authorized) {
+        return;
+      }
+      String token = await FirebaseMessaging.instance.getToken();
+      await FirestoreService().updateTokens(token);
     }
     UserSettings newSettings = UserSettings(val, currentSettings.reminderTime);
     FirestoreService()
