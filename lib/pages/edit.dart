@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:xcuseme/model.dart';
 import 'package:xcuseme/firestore_service.dart';
 import 'package:xcuseme/pages/create_or_edit.dart';
 import 'package:xcuseme/constants/style.dart';
@@ -59,15 +58,13 @@ class EditPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final Event event = ModalRoute.of(context).settings.arguments;
     List<Event> events = context.watch<List<Event>>();
-    return Consumer<Model>(builder: (context, model, child) {
-      return CreateOrEditPage(
-        eventType: event.type,
-        selectedDay: event.datetime,
-        events: events,
-        onSave: _onSave,
-        event: event,
-        rightButton: _deleteButton(context, event),
-      );
-    });
+    return CreateOrEditPage(
+      eventType: event.type,
+      selectedDay: event.datetime,
+      events: events,
+      onSave: _onSave,
+      event: event,
+      rightButton: _deleteButton(context, event),
+    );
   }
 }

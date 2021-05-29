@@ -8,38 +8,42 @@ const Map<EventType, String> TYPE_STRINGS = {
 class Event {
   final EventType type;
   final String description;
-  final int millis;
+  final int year;
+  final int month;
+  final int day;
 
-  static final millisKey = 'millis';
   static final typeKey = 'type';
   static final descriptionKey = 'description';
+  static final yearKey = 'year';
+  static final monthKey = 'month';
+  static final dayKey = 'day';
 
-  Event(this.type, this.description, this.millis);
+  Event(this.type, this.description, this.year, this.month, this.day);
 
   factory Event.fromMap(Map<String, dynamic> data) {
     EventType type = data[typeKey] == TYPE_STRINGS[EventType.EXCUSE]
         ? EventType.EXCUSE
         : EventType.EXERCISE;
-    return Event(type, data[descriptionKey], data[millisKey]);
+    return Event(type, data[descriptionKey], data[yearKey], data[monthKey],
+        data[dayKey]);
   }
 
   Map<String, dynamic> toMap() {
     return {
-      millisKey: millis,
       typeKey: TYPE_STRINGS[type],
       descriptionKey: description,
+      yearKey: year,
+      monthKey: month,
+      dayKey: day
     };
   }
 
   Event update(DateTime newDate, String newDescription) {
     return Event(
-      this.type,
-      newDescription,
-      newDate.millisecondsSinceEpoch,
-    );
+        this.type, newDescription, newDate.year, newDate.month, newDate.day);
   }
 
-  DateTime get datetime => DateTime.fromMillisecondsSinceEpoch(millis);
+  DateTime get datetime => DateTime(year, month, day);
 
   @override
   String toString() {
