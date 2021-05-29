@@ -42,10 +42,7 @@ class XCuseMeApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => AuthProvider(
-            child: Consumer<Model>(builder: (context, model, child) {
-              return HomePage(model);
-            }),
-            currentRoute: '/'),
+            child: HomePage(context.watch<Model>()), currentRoute: '/'),
         '/log-excuse': (context) => AuthProvider(
             child: CreatePage(EventType.EXCUSE), currentRoute: '/log-excuse'),
         '/log-exercise': (context) => AuthProvider(

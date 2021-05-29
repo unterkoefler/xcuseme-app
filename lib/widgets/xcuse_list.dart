@@ -17,7 +17,7 @@ class XCuseList extends StatelessWidget {
           style: TextStyle(
               fontSize: SMALL_HEADING_FONT_SIZE, fontStyle: FontStyle.italic));
     }
-    events.sort((a, b) => b.millis.compareTo(a.millis));
+    events.sort((a, b) => b.datetime.compareTo(a.datetime));
 
     return Expanded(
         child: ListView.separated(

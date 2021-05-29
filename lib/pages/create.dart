@@ -14,22 +14,22 @@ class CreatePage extends StatelessWidget {
   void _onSave(BuildContext context, DateTime selectedDay, String description,
       EventType eventType, Event _) {
     User user = context.read<User>();
-    Event event =
-        Event(eventType, description, selectedDay.millisecondsSinceEpoch);
+    Event event = Event(eventType, description, selectedDay.year,
+        selectedDay.month, selectedDay.day);
     FirestoreService().addEvent(user: user, event: event);
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    Model model = context.watch<Model>();
     List<Event> events = context.watch<List<Event>>();
-    return Consumer<Model>(builder: (context, model, child) {
-      return CreateOrEditPage(
-        eventType: _eventType,
-        selectedDay: model.selectedDay,
-        events: events,
-        onSave: _onSave,
-      );
-    });
+    print("events length: ${events.length}");
+    return CreateOrEditPage(
+      eventType: _eventType,
+      selectedDay: model.selectedDay,
+      events: events,
+      onSave: _onSave,
+    );
   }
 }

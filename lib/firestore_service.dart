@@ -64,22 +64,24 @@ class FirestoreService {
       DateTime newDate,
       String newDescription}) async {
     Event newEvent = oldEvent.update(newDate, newDescription);
-    await _eventsRef(user)
-        .where('millis', isEqualTo: oldEvent.millis)
-        .get()
-        .then((snapshot) {
+    await _getEvent(user, oldEvent).then((snapshot) {
       snapshot.docs.forEach((doc) => doc.reference.update(newEvent.toMap()));
     });
     return newEvent;
   }
 
   Future<void> deleteEvent({User user, Event event}) {
-    _eventsRef(user)
-        .where('millis', isEqualTo: event.millis)
-        .get()
-        .then((snapshot) {
+    _getEvent(user, event).then((snapshot) {
       snapshot.docs.forEach((doc) => doc.reference.delete());
     });
+  }
+
+  Future<QuerySnapshot> _getEvent(User user, Event event) {
+    return _eventsRef(user)
+        .where('year', isEqualTo: event.year)
+        .where('month', isEqualTo: event.month)
+        .where('day', isEqualTo: event.day)
+        .get();
   }
 
   CollectionReference _eventsRef(User user) {
